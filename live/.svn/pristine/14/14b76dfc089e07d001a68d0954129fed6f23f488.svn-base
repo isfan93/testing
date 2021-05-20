@@ -1,0 +1,28 @@
+<?php
+
+if (!defined('BASEPATH'))
+    exit('No direct script access allowed');
+
+class Rawat_inap extends MY_Controller {
+
+    private $cf;
+    
+    function __construct() {
+        parent::__construct();
+        $this->cf = array(
+            'modul_id' => 11
+        );
+        $this->load->model('rawat_inap/rawat_inap_model','rim');
+    }
+
+    function index() {
+        $data['main_view'] = 'index';
+        $data['title'] = 'Rawat Inap';
+        $data['cf'] = $this->cf;
+        $data['is_fullpage'] = true;
+        $data['current'] = '';
+        $data['desc'] = 'Daftar Pasien Rawat Inap';
+        $this->load->view('template', $data);
+    }
+
+}

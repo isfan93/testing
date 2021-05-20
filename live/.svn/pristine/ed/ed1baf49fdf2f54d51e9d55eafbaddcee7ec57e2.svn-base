@@ -1,0 +1,27 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class Pelaporan extends MY_Controller {
+	function __construct() {
+		parent::__construct();
+		
+		// modul id
+		$this->cf = array(
+				'modul_id'	=> 9
+			);
+
+		// local variable
+
+		// model 
+	}
+
+	// antrian
+	function index(){
+		$data['main_view']	= 'pelaporan/index';
+		$data['title']		= 'Pelaporan';
+		$data['cf']			=  $this->cf;
+		$data['current']	= '';
+		$data['desc']		= 'Description. ';
+		$this->load->view('template',$data);
+	}
+
+}

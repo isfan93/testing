@@ -1,0 +1,110 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class Rawat_jalan extends MY_Controller {
+	function __construct() {
+		parent::__construct();
+		// model 
+		$this->load->model('lab_model');
+
+		// keterangan kode
+		// queue status 1 => baru antri, 2 antri dan sudah dibayar , 3 sudah dilakukan tindakan | selesai
+		$this->active 		= 1;
+		$this->activeAndPay	= 2;
+		$this->closed		= 3;
+		//lab bill status 1 belum dibayar, 2 sudah dibayar
+	}
+
+	function index(){
+		$data['main_view']	= 'lab/rawat_jalan/index';
+		$data['title']		= 'Lab & Tindakan';
+		$data['cf']			=  $this->cf;
+		$data['current']	= '';
+		$data['desc']		= 'Description. ';
+		$data['antrian']	= $this->lab_model->get_antrian($this->activeAndPay);
+		$this->load->view('template',$data);
+	}
+
+	function data_diri($sd_rekmed){
+		$data['main_view']	= 'poli_tulang/data_diri';
+		$data_pasien		= $this->db->get_where('trx_lab_queue',array('sd_rekmed'=>$sd_rekmed,'lab_queue_status'=>'2'));
+		if($data_pasien->num_rows() == 1){
+			$data['pasien'] = db_conv($this->db->get_where('ptn_social_data',array('sd_rekmed'=>$sd_rekmed)));
+			$data_pasien	= $data_pasien->row();
+			$data['pasien']->lab_queue_id 	= $data_pasien->lab_queue_id;
+		}
+		
+		$this->load->view('lab/rawat_jalan/data_diri',$data);
+	}
+
+	function proses(){
+		$data['prev'] 	= $this->input->post('ds');
+		$data['main_view']	= 'rawat_jalan/proses';
+		$data['title']		= 'Pasien Poli Tulang';
+		$data['cf']			=  $this->cf;
+		$data['current']	= '';
+		$data['desc']		= 'Description. ';
+		$this->load->view('template',$data);
+	}
+
+	function load_form($lab_queue_id){
+		// get penunjang & detail penunjang
+		$data['prev']['lab_queue_id'] = $lab_queue_id;
+		$data['penunjang']	= $this->lab_model->get_trx_penunjang($lab_queue_id);
+		$data['penunjang_detail'] = $this->lab_model->get_trx_penunjang_detail($lab_queue_id);
+		$this->load->view('lab/rawat_jalan/hasil',$data);
+	}
+
+	function simpan_hasil(){
+		$data 	= $this->input->post('hasil');
+		$lab_queue_id 	= $this->input->post('lab_queue_id');
+		$dr_id 	= $this->input->post('dr_id');
+		$operator_id	= $this->input->post('operator_id');
+		$data_queue['dr_id'] = $dr_id;
+		$data_queue['operator_id'] = $operator_id;
+		$this->db->where('lab_queue_id',$lab_queue_id);
+		$this->db->update('trx_lab_queue',$data_queue);
+		foreach ($data as $key => $value) {
+			$dt['dsupport_value'] = $value;
+			if( !empty($_FILES['image']['name'][$key]) ){
+				debug_array($_FILES['image']['name'][$key],true);
+				$name = $_FILES['image']['name'][$key];
+				$name = $lab_queue_id."_".str_replace(' ', '', $name);
+				copy($_FILES["image"]['tmp_name'][$key],getcwd().'/uploads/labs/'.$name);
+				$link = base_url()."uploads/labs/".$name;
+				$dt['dsupport_value_image'] = $link;
+			}
+			$this->db->where(array('lab_queue_id'=>$lab_queue_id,'dsupport_code'=>$key));
+			$this->db->update('trx_lab_treathment_detail',$dt);
+			unset($dt['dsupport_value_image']);
+		}
+		redirect(cur_url(-1));
+	}
+	
+	function finish_pemeriksaan(){
+		$data 	= $this->input->post('hasil');
+		$lab_queue_id 	= $this->input->post('lab_queue_id');
+		$dr_id 	= $this->input->post('dr_id');
+		$operator_id	= $this->input->post('operator_id');
+		$data_queue['dr_id'] = $dr_id;
+		$data_queue['operator_id'] = $operator_id;
+		$data_queue['lab_queue_status']	= 3;
+		$this->db->where('lab_queue_id',$lab_queue_id);
+		$this->db->update('trx_lab_queue',$data_queue);
+		foreach ($data as $key => $value) {
+			$dt['dsupport_value'] = $value;
+			if( !empty($_FILES['image']['name'][$key]) ){
+				// debug_array($_FILES['image']['name'][$key],true);
+				$name = $_FILES['image']['name'][$key];
+				$name = $lab_queue_id."_".str_replace(' ', '', $name);
+				copy($_FILES["image"]['tmp_name'][$key],getcwd().'/uploads/labs/'.$name);
+				$link = base_url()."uploads/labs/".$name;
+				$dt['dsupport_value_image'] = $link;
+			}
+			$this->db->where(array('lab_queue_id'=>$lab_queue_id,'dsupport_code'=>$key));
+			$this->db->update('trx_lab_treathment_detail',$dt);
+			unset($dt['dsupport_value_image']);
+		}
+		redirect(cur_url(-1));
+	}
+
+}

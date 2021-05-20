@@ -1,0 +1,44 @@
+<style>
+    .tabs-left > .nav-tabs > li > a{min-width:145px}
+</style>
+
+<div class="tabbable tabs-left">
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#nursePic" data-toggle="tab">Person in Charge</a></li>
+        <li class=""><a href="#nursingDiagnosis" data-toggle="tab">Diagnose</a></li>
+        <li class=""><a href="#nursingTreatment" data-toggle="tab">Treatment</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="nursePic">
+            <?php $this->load->view('nursing_pic',$data) ?>
+        </div>
+        <div class="tab-pane" id="nursingDiagnosis">
+            <?php $this->load->view('nursing_diagnosis') ?>
+        </div>
+        <div class="tab-pane" id="nursingTreatment">
+            <?php $this->load->view('nursing_treatment',$treatment) ?>
+        </div>
+    </div>
+</div>
+<div class='page_footer row-fluid'>
+    <?= form_button(array('data-url' => base_url().'rawat_inap/simpan_perencanaan_keperawatan/'.$this->uri->segment(3),'class' => 'btn btn-primary', 'id' => 'submitNP' , 'type' => 'submit', 'content' => 'Simpan')) ?>
+</div>
+
+<script>
+    $('#submitNP').die().live('click', function(e) {
+        e.preventDefault();
+        var data = $('#nursingPICForm').serialize();
+        data += '&' + $('#nursingDiagnosisForm').serialize();
+        data += '&' + $('#nursingTreatmentForm').serialize();
+        var url = $(this).attr('data-url');
+        $.post(url, data, function (response) {
+            response = JSON.parse(response);
+            if ("success" === response.success) {
+                alert();
+                $("#gritter-notice-wrapper").fadeIn().delay(300).fadeOut(function () {
+                    location.reload(true);
+                });
+            }
+        });
+    });
+</script>

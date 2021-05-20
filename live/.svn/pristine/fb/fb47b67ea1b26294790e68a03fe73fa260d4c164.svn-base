@@ -1,0 +1,344 @@
+<style type="text/css" media="screen">
+    #fx_supplier_ctr.ffb{
+        width:450px !important;
+        top: 28px !important;
+    }
+    #fx_supplier_ctr .row .col1{
+        float:left;
+        width:10px;
+    }
+    #fx_supplier_ctr .row .col2{
+        float:left;
+        margin-left: 15px;
+        width:140px;
+    }
+    #fx_supplier_ctr .row .col3{
+        float:left;
+        margin-left: 15px;
+        width:180px;
+    }
+    #fx_item.ffb{
+        width:320px !important;
+        top: 28px !important;
+    }
+    #fx_item_ctr .row .col1{
+        float:left;
+        width:10px;
+    }
+    #fx_item_ctr .row .col2{
+        float:left;
+        margin-left: 15px;
+        width:220px;
+    }
+    .ffb-input{
+        width: 250px !important;
+    }
+    .frm_search input{margin-top:-1px;float:right;margin-left:2px}
+    .frm_search .btn{float:right;margin-left:5px}
+    .frm_search .btn span{padding:2px 10px;}
+    .search_choice a{font-weight:bold}
+    .search_choice a.active{color:#fb9338}
+    .search_choice {float:right;margin-right:95px}
+    #advance{display:none}
+    #filter{border-bottom: 1px dashed #DDD;}
+    #body_search{margin-top:10px}
+    .tname{font-size:110%}
+    #dyntable tbody tr td{border-right:none}
+    #dyntable tbody tr td + td + td {border-right:1px solid #DDD}
+    #dyntable tr:nth-child(even){
+        background:#F7F7F7;
+    }
+    .dataTables_scrollHead{
+        margin-bottom: -22px;
+    }
+    .dataTables_info{
+        margin-top: 20px;
+    }
+    .table_tr thead th{
+        height: 28px;
+        vertical-align: middle;
+        font-size: 13px;
+    }
+    .table_tr tbody th{
+        height: 28px;
+        vertical-align: middle;
+        font-size: 13px;
+    }
+</style>
+<script type="text/javascript">
+    $(function(){
+        $('.datepicker').datepicker({
+            minDate: '0',
+        });
+
+        $('#fx_supplier').flexbox(BASE+"gudang/purchase_order/get_supplier", {
+            //method : 'POST',
+            paging: false,
+            showArrow: false ,
+            maxVisibleRows : 10,
+            width : 185,
+            resultTemplate: '<div class="col1">{id}</div><div class="col2">{name}</div><div class="col3">{address}</div>',
+            onSelect:function(){
+                cek_sup_id();
+            }
+        });
+
+        $('#fx_item').flexbox(BASE+"gudang/get_item", {
+            //method : 'POST',
+            paging: false,
+            showArrow: false ,
+            maxVisibleRows : 10,
+            width : 180,
+            resultTemplate: '<div class="col1">{id}</div><div class="col2">{name}</div>',
+            onSelect:function(){
+                $("#qty").focus();
+                $.getJSON(BASE+"gudang/get_item_harga/"+$("#fx_item_hidden").val(), function(json) {
+                    $("#harga_beli_total_ppn").val(json.harga_beli);
+                    $("#unit").val(json.unit);
+                })
+            }
+
+        });
+
+        $("#fx_supplier_input").change(function(){
+            cek_sup_id();
+        })
+
+        function cek_sup_id(){
+            if( ($("#fx_supplier_hidden").val()).length == 1 )
+                $("#next").removeAttr('disabled');
+            else
+                $("#next").attr('disabled','disabled');
+        }
+
+    });
+    </script>
+<div id="his">
+<div class="pageheader notab">
+    <h1 class="pagetitle">Tambah <?=$title?></h1>
+</div>
+
+<div id="field1">
+<div class="container-fluid">
+    <div class="row-fluid">
+        <div class="span12">
+            <div class="widget-box">
+                <div class="widget-title">
+                    <span class="icon">
+                        <i class="icon-align-justify"></i>                                  
+                    </span>
+                    <h5>Langkah 1 : Masukkan Data Retur</h5>
+                </div>
+                <div class="widget-content nopadding">
+                    <?=form_open(cur_url(-1).'add_retur',array('class' => 'form-horizontal form','id' => 'form_sup')); ?>
+                        <div class="control-group">
+                            <label class="control-label">No Retur *</label>
+                            <div class="controls">
+                                <input type="text" style="width:15%" id="ir_id" readonly="readonly" name="ds[ir_id]" value="<?php echo $ir_id;?>" >
+                            </div>
+                            <label class="control-label">Supplier *</label>
+                            <div class="controls">
+                                <div id="fx_supplier" name="fx_supplier"></div>
+                            </div>
+                            <label class="control-label">Tanggal Retur *</label>
+                            <div class="controls">
+                                <input type="text" class="mini datepicker" name="ir_date_req" id="ir_date_req" data-date-format="dd-mm-yyyy">
+                            </div>
+                            <label class="control-label">PPN *</label>
+                            <div class="controls">
+                                <input type="text" placeholder="PPn" class="input input-mini" id="ir_ppn" value="10" name="ds[ir_ppn]"> %
+                            </div>
+                            <label class="control-label">Petugas *</label>
+                            <div class="controls">
+                                <input type="text" placeholder="Petugas" class="mini" id="ir_operator" value="<?=get_user('sd_name')?>" name="ds[ir_operator]" readonly="true">
+                            </div>
+                            <label class="control-label">Catatan</label>
+                            <div class="controls">
+                                <textarea  class="medium" style="width:40%" id="ir_note" name="ds[ir_note]"></textarea>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button id="back" class="hide">Kembali</button>
+                            <button id="next" class="btn btn-primary pull-right" disabled="disabled">Lanjut</button>
+                            <button  style="margin-right:10px;" id="reset" class="btn btn-default pull-right" type="reset">Reset</button>
+                        </div>
+                    </form>
+                </div>
+            </div>                      
+        </div>
+    </div>
+</div>
+</div>
+</div>
+
+<div id="field2" class="hide">
+<div class="container-fluid">
+    <div class="row-fluid">
+        <div class="span12">
+            <div class="widget-box">
+                <div class="widget-title">
+                    <span class="icon">
+                        <i class="icon-align-justify"></i>                                  
+                    </span>
+                    <h5 style="width:94%"><span>Langkah 2 : Masukkan Detail Retur</span></h5>
+                </div>
+                    <?=form_open(cur_url(-1).'save_retur',array('class' => 'form-horizontal form','id'=>'form_det')); ?>
+                        <div class="frm_trx" style="width:96%;padding:10px;height:195px;margin:0 auto;margin-top:20px;margin-bottom:20px;border:1px dashed #969696;color:#AAA">
+                            <label class="control-label" style="width:160px;">Item *</label>
+                            <div class="controls" style="margin-left:170px;">
+                                <div name="fx_item" id="fx_item"></div>
+                            </div>
+                            <label class="control-label" style="width:160px;">Harga Beli (Satuan) *</label>
+                            <div class="controls" style="margin-left:170px;">
+                                <input type="text" class="input-small" id="harga_beli_total_ppn" autocomplete="off">
+                            </div>
+                            <label class="control-label" style="width:160px;">Jumlah *</label>
+                            <div class="controls" style="margin-left:170px;">
+                                <input type="text" name="" class="input-small" id="qty" autocomplete="off"><b id="unit"></b>
+                            </div>
+                            <label class="control-label" style="width:160px;"></label>
+                            <div class="controls" style="margin-left:170px;">
+                                <a class="btn btn-warning" id="tambah">tambah</a>
+                            </div>
+                        </div>
+                        <div class="widget-box" style="margin:10px;">
+                            <div class="widget-content" style="border:0">
+                                <table class="table table-bordered table-striped table_tr" id="tbTambah">
+                                    <thead>
+                                        <tr>
+                                            <th>Kode</th>
+                                            <th>Nama Obat</th>
+                                            <th>Jumlah</th>
+                                            <th style="width:150px">Harga Satuan</th>
+                                            <th style="width:150px">Total</th>
+                                            <th style="width:75px">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- <tr>
+                                            <td colspan="6">Data belum tersedia.</td>
+                                        </tr> -->
+                                    </tbody>
+                                </table> 
+                            </br>
+                                <table class="table">
+                                    <tbody>
+                                        <tr>
+                                            <td style="width:70%;border-top:none;">&nbsp;</td>
+                                            <td style="width:20%;border-top:none;font-weight:bold;">Total </td>
+                                            <td style="border-top:none;font-weight:bold;">
+                                                <span id="grandText" style="font-weight:bold;text-align:right;"></span>
+                                                <input type="hidden" readonly="readonly" id="grand" name="grand" autocomplete="off" class="input-small">
+                                            </td>
+                                        </tr>
+                                        <!-- <tr>
+                                            <td style="width:70%">&nbsp;</td>
+                                            <td style="width:10%">Sub Total</td>
+                                            <td><input type="text" readonly="readonly" id="tot" name="tot" autocomplete="off"></td>
+                                        </tr>
+                                        <tr>
+                                            <td>&nbsp;</td>
+                                            <td>PPn</td>
+                                            <td><input type="text" readonly="readonly" id="ppn" name="ppn" autocomplete="off"></td>
+                                        </tr>
+                                        <tr>
+                                            <td>&nbsp;</td>
+                                            <td>Grand Total</td>
+                                            <td><input type="text" readonly="readonly" id="grand" name="grand" autocomplete="off"></td>
+                                        </tr> -->
+                                    </tbody>
+                                </table>                            
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary pull-right">Simpan</button>
+                            <!-- <button style="margin-right:10px;" id="reset" class="btn pull-right" type="reset">Reset</button> -->
+                            <button style="margin-right:10px;" class="btn pull-right back" type="button">Kemballi</button>
+                        </div>
+                    </form>
+            </div>                      
+        </div>
+    </div>
+</div>
+</div>
+
+<script type="text/javascript">
+var count = 0;
+    $(function(){
+        $("#next").click(function(){
+            $("#field1").fadeOut(function(){
+                $("#field2").fadeIn();
+                $("#fx_item_input").focus();
+            })
+            return false;
+        })
+        $(".back").click(function(){
+            $("#field2").fadeOut(function(){
+                $("#field1").fadeIn();
+            })
+            return false;
+        })
+        $("#back").click(function(){
+            window.history.back(); 
+        })
+        $("#history").click(function(){
+            $("#his").fadeOut(function(){
+                $("#history1").fadeIn();
+            })
+            return false;
+        })
+        $("#add").click(function(){
+            $("#history1").fadeOut(function(){
+                $("#his").fadeIn();
+            })
+            return false;
+        })
+        $(".form").submit(function(){
+            var url  = $(this).attr('action');
+            var data = $("#form_sup").serialize()+"&"+$("#form_det").serialize();
+            $.post(url,data, function(data) {
+                $("#reset").trigger('click');
+                $("#back").trigger('click');
+            }); 
+            return false;
+        }) 
+
+        $("#tambah").click(function(){
+            count += 1;
+                var nama    = $("#fx_item_input").val();
+                var item    = $("#fx_item_hidden").val();
+                var harga   = $("#harga_beli_total_ppn").val();
+                var qty     = $("#qty").val();
+                subtot = harga*qty;
+                $("<tr><td>"+item+"</td><td>"+nama+"</td><td style='text-align:center;width:40px'>"+qty+"</td><td style='text-align:right;width:70px'>"+harga+"</td><td style='text-align:right;width:100px'>"+subtot+"</td><td style='width:5px;text-align:center' class='del'><a href='' class='deletes' style=''><b class='icon-remove'></b></a></td><input id='rows"+count+"' name='rows[]' value='"+item+"|"+qty+"' type='hidden'>").appendTo('#tbTambah tbody');
+                $("#fx_item_input").val("");
+                $("#qty").val("");
+                $("#harga_beli_total_ppn").val("");
+                calculate();
+                $("#fx_item_input").focus();
+                return false;
+        })   
+
+        $(".deletes").die('click').live('click',function(){
+            $(this).parent().parent().fadeOut(function(){
+                $(this).remove();
+                calculate();
+            })
+            return false;
+        })  
+
+        function calculate(){
+            var total = 0;
+            $("#tbTambah tbody tr").each(function(){
+                total += parseInt($(this).find('td:eq(4)').html());
+            })
+            $("#grand").val(total);
+            $("#grandText").html(total);
+        }
+        
+        $("#grandText").html(0);
+        $("#grand").val(0);
+        var tanggal = "<?php echo date('m/d/Y')?>";
+        $("#ir_date_req").val(tanggal);
+    })
+</script>

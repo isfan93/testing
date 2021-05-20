@@ -1,0 +1,61 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class Rawat_jalan extends MY_Controller {
+	function __construct() {
+		parent::__construct();
+		
+		// modul id
+		$this->cf = array(
+			'modul_id'	=> 9
+		);
+
+		// local variable
+
+		// model 
+		//$this->load->model('pelaporan_model');
+		$this->load->model('rawat_jalan_model');
+		// keterangan kode
+
+	}
+
+	function index(){
+		$data['main_view']	= 'pelaporan/rawat_jalan/index';
+		$data['title']		= 'Kunjungan Rawat Jalan';
+		$data['current']	= 28;
+		$cf					= $this->cf;
+		$data['cf']			= $cf;
+		$data['desc']		= 'Description. ';
+		$this->load->view('template',$data);
+	}
+	
+	function loaddata(){		
+		$data['datas'] = $this->rawat_jalan_model->get_list();
+		$this->load->view('rawat_jalan/data',$data);
+	}
+
+
+	function get_kunjungan_rawat_jalan($visit_status = 4){
+
+		$config['sTable']		= "trx_visit t";
+		$config['aColumns']		= array("visit_in","sd_rekmed","sd_name","sd_address","pl_name","dr_name");
+		$config['aColumns_format']	= array("t.visit_in","p.sd_rekmed","p.sd_name","p.sd_address","mp.pl_name","me.sd_name as dr_name");
+		$config['php_format']	= array("date","","strtoupper","","strtoupper","","");
+		$config['key']			= "t.visit_id";
+		$config['join'][]		= array("ptn_social_data p","p.sd_rekmed = t.visit_rekmed");
+		// $config['join'][]		= array("trx_visit_bill tvb","tvb.visit_id = t.visit_id");
+		// $config['join'][]		= array("mst_insurance msti","tvb.ins_id = msti.ins_id");
+		$config['join'][]		= array("trx_medical tm","tm.mdc_id = t.visit_id");
+		$config['join'][]		= array("mst_employer me","me.id_employe = tm.dr_id");
+		$config['join'][]		= array("mst_poly mp","mp.pl_id = tm.pl_id");
+		$config['where'][]		= "t.visit_status >= '$visit_status'";
+		$config['where'][]		= "t.visit_type = 'rajal'";
+		$config['searchColumn']	= array("sd_name");
+		$config['aksi']			= array(
+									'stat'  	=> false,
+									// 'key'		=> 'mdc_id',
+									// 'pilih'	=> base_url().'kasir/lab/detail_transaksi/',
+									);
+		init_datatable($config);
+	}
+
+}

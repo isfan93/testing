@@ -1,0 +1,38 @@
+<?php if (! defined("BASEPATH")) exit;
+class Keuangan_model extends CI_Model {
+
+	function __construct() {
+		parent::__construct();
+		$this->db->reconnect();
+	}
+
+	function get_list(){
+		$query=$this->db->query("SELECT tv.visit_in,tv.visit_rekmed,psd.sd_name,psd.sd_address,mp.pl_name,me.sd_name AS name_employer,SUM(tvb.price) as price
+				FROM trx_visit tv
+				JOIN trx_medical tm ON (tv.visit_id=tm.mdc_id)
+				JOIN ptn_social_data psd ON (tm.sd_rekmed=psd.sd_rekmed)
+				JOIN mst_poly mp ON(mp.pl_id=tm.pl_id)
+				JOIN mst_employer me ON(me.id_employe=tm.dr_id)
+				JOIN trx_visit_bill tvb ON (tvb.visit_id=tv.visit_id)
+				GROUP BY tvb.visit_id");
+		return $query;
+	}
+	
+	function get_report($filter){
+		//$tgl1=$filter['tgl'][0]
+		$where='';
+		if($filter[3]!=''){
+			$where="WHERE tv.visit_in BETWEEN '$filter[2]-$filter[1]-$filter[0]' AND '$filter[5]-$filter[4]-$filter[3]'";
+		}
+		$query=$this->db->query("SELECT tv.visit_in,tv.visit_rekmed,psd.sd_name,psd.sd_address,mp.pl_name,me.sd_name AS name_employer,SUM(tvb.price) as price
+				FROM trx_visit tv
+				JOIN trx_medical tm ON (tv.visit_id=tm.mdc_id)
+				JOIN ptn_social_data psd ON (tm.sd_rekmed=psd.sd_rekmed)
+				JOIN mst_poly mp ON(mp.pl_id=tm.pl_id)
+				JOIN mst_employer me ON(me.id_employe=tm.dr_id)
+				JOIN trx_visit_bill tvb ON (tvb.visit_id=tv.visit_id)		
+					$where
+				GROUP BY tvb.visit_id");
+		return $query;
+	}
+}

@@ -1,0 +1,124 @@
+-- --------------------------------------------------------
+-- Host:                         127.0.0.1
+-- Server version:               5.5.40-0ubuntu0.14.04.1 - (Ubuntu)
+-- Server OS:                    debian-linux-gnu
+-- HeidiSQL Version:             8.3.0.4694
+-- --------------------------------------------------------
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET NAMES utf8 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+
+-- Dumping structure for table db_simrs.trx_diagnosa_treathment
+CREATE TABLE IF NOT EXISTS `trx_diagnosa_treathment` (
+  `mdc_id` varchar(45) DEFAULT NULL,
+  `dat_id` varchar(45) NOT NULL,
+  `dat_diag` varchar(45) NOT NULL,
+  `dat_case` varchar(10) NOT NULL,
+  `dat_note` text,
+  `modi_id` smallint(6) DEFAULT NULL,
+  `modi_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`dat_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- Dumping data for table db_simrs.trx_diagnosa_treathment: ~6 rows (approximately)
+/*!40000 ALTER TABLE `trx_diagnosa_treathment` DISABLE KEYS */;
+INSERT IGNORE INTO `trx_diagnosa_treathment` (`mdc_id`, `dat_id`, `dat_diag`, `dat_case`, `dat_note`, `modi_id`, `modi_datetime`) VALUES
+	('14100001001', 'DA-14100001', '161', 'new', '', NULL, '2014-10-04 23:00:07'),
+	('14100001001', 'DA-14100002', '15', 'old', '', NULL, '2014-10-04 23:00:07'),
+	('14100001002', 'DA-14100003', '19', '', NULL, NULL, '2014-10-04 23:36:31'),
+	('14100001003', 'DA-14100004', '59', '', NULL, NULL, '2014-10-08 10:26:30'),
+	('14100001004', 'DA-14100005', '', '', NULL, NULL, '2014-10-08 10:27:25'),
+	('14100004', 'DA-14100006', '42', '', '', NULL, '2014-10-10 15:25:32');
+/*!40000 ALTER TABLE `trx_diagnosa_treathment` ENABLE KEYS */;
+
+
+-- Dumping structure for table db_simrs.trx_medical_anamnesa
+CREATE TABLE IF NOT EXISTS `trx_medical_anamnesa` (
+  `ma_id` int(45) NOT NULL AUTO_INCREMENT,
+  `mdc_id` varchar(10) NOT NULL,
+  `ma_desc` text NOT NULL,
+  `modi_id` int(11) NOT NULL,
+  `modi_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`ma_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=latin1;
+
+-- Dumping data for table db_simrs.trx_medical_anamnesa: ~4 rows (approximately)
+/*!40000 ALTER TABLE `trx_medical_anamnesa` DISABLE KEYS */;
+INSERT IGNORE INTO `trx_medical_anamnesa` (`ma_id`, `mdc_id`, `ma_desc`, `modi_id`, `modi_datetime`) VALUES
+	(15, '1410000100', 'Pusing', 0, '2014-10-04 23:00:07'),
+	(17, '1410000100', '', 0, '2014-10-04 23:36:31'),
+	(18, '1410000100', '', 0, '2014-10-08 10:26:30'),
+	(19, '1410000100', '', 0, '2014-10-08 10:27:25');
+/*!40000 ALTER TABLE `trx_medical_anamnesa` ENABLE KEYS */;
+
+
+-- Dumping structure for table db_simrs.trx_medical_objective
+CREATE TABLE IF NOT EXISTS `trx_medical_objective` (
+  `mo_id` int(45) NOT NULL AUTO_INCREMENT,
+  `mdc_id` varchar(10) NOT NULL,
+  `mo_value` varchar(45) DEFAULT NULL,
+  `mo_desc` text,
+  `modi_id` int(11) DEFAULT NULL,
+  `modi_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`mo_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=latin1;
+
+-- Dumping data for table db_simrs.trx_medical_objective: ~4 rows (approximately)
+/*!40000 ALTER TABLE `trx_medical_objective` DISABLE KEYS */;
+INSERT IGNORE INTO `trx_medical_objective` (`mo_id`, `mdc_id`, `mo_value`, `mo_desc`, `modi_id`, `modi_datetime`) VALUES
+	(15, '1410000100', NULL, 'Pucat', NULL, '2014-10-04 23:00:07'),
+	(17, '1410000100', NULL, '', NULL, '2014-10-04 23:36:31'),
+	(18, '1410000100', NULL, '', NULL, '2014-10-08 10:26:30'),
+	(19, '1410000100', NULL, '', NULL, '2014-10-08 10:27:25');
+/*!40000 ALTER TABLE `trx_medical_objective` ENABLE KEYS */;
+
+
+-- Dumping structure for table db_simrs.trx_medical_ptn_now
+CREATE TABLE IF NOT EXISTS `trx_medical_ptn_now` (
+  `mdc_id` varchar(45) NOT NULL,
+  `ptn_medical_weight` int(11) DEFAULT NULL,
+  `ptn_medical_height` int(11) DEFAULT NULL,
+  `ptn_medical_blod_sy` int(11) DEFAULT NULL,
+  `ptn_medical_blod_ds` int(11) DEFAULT NULL,
+  `ptn_medical_kesadaran` varchar(50) DEFAULT NULL,
+  `ptn_medical_nadi` int(11) DEFAULT NULL,
+  `ptn_medical_heartrate` int(11) DEFAULT NULL,
+  `ptn_medical_temperatur` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- Dumping data for table db_simrs.trx_medical_ptn_now: ~7 rows (approximately)
+/*!40000 ALTER TABLE `trx_medical_ptn_now` DISABLE KEYS */;
+INSERT IGNORE INTO `trx_medical_ptn_now` (`mdc_id`, `ptn_medical_weight`, `ptn_medical_height`, `ptn_medical_blod_sy`, `ptn_medical_blod_ds`, `ptn_medical_kesadaran`, `ptn_medical_nadi`, `ptn_medical_heartrate`, `ptn_medical_temperatur`) VALUES
+	('14100001001', 50, 165, 120, 80, 'CM', 80, 80, 36),
+	('14100001002', 50, 165, 120, 80, 'CM', 80, 80, 36),
+	('14100001003', 50, 165, 120, 80, 'CM', 80, 80, 36),
+	('14100001004', 50, 165, 120, 80, 'CM', 80, 80, 36),
+	('14100001005', 50, 165, 120, 80, 'CM', 80, 80, 36),
+	('14100001006', 50, 165, 120, 80, 'CM', 80, 80, 36),
+	('14100004', 0, 0, 120, 80, 'CM', 80, 80, 37);
+/*!40000 ALTER TABLE `trx_medical_ptn_now` ENABLE KEYS */;
+
+
+-- Dumping structure for table db_simrs.trx_recipe
+CREATE TABLE IF NOT EXISTS `trx_recipe` (
+  `mdc_id` varchar(45) DEFAULT NULL,
+  `recipe_id` varchar(45) NOT NULL,
+  `recipe_paramedic_price` double(10,2) DEFAULT NULL,
+  PRIMARY KEY (`recipe_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- Dumping data for table db_simrs.trx_recipe: ~6 rows (approximately)
+/*!40000 ALTER TABLE `trx_recipe` DISABLE KEYS */;
+INSERT IGNORE INTO `trx_recipe` (`mdc_id`, `recipe_id`, `recipe_paramedic_price`) VALUES
+	('14100001001', 'RS-14100001', 0.00),
+	('14100001002', 'RS-14100002', 0.00),
+	('14100001003', 'RS-14100003', 0.00),
+	('14100001004', 'RS-14100004', 0.00),
+	('14100001005', 'RS-14100005', 0.00),
+	('14100004', 'RS-14100006', 0.00);
+/*!40000 ALTER TABLE `trx_recipe` ENABLE KEYS */;
+/*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
+/*!40014 SET FOREIGN_KEY_CHECKS=IF(@OLD_FOREIGN_KEY_CHECKS IS NULL, 1, @OLD_FOREIGN_KEY_CHECKS) */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

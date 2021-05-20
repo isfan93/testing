@@ -1,0 +1,266 @@
+<link rel="stylesheet" href="<?=base_url()?>assets/css/jquery.gritter.css" />
+<style type="text/css" media="screen">
+    #fx_supplier_ctr.ffb{
+        width:320px !important;
+        top: 28px !important;
+    }
+    #fx_supplier_ctr .row .col1{
+        float:left;
+        /*width:50px;*/
+    }
+    #fx_supplier_ctr .row .col2{
+        float:left;
+        margin-left: 15px;
+        width:100px;
+    }
+     #fx_supplier_ctr .row .col3{
+        float:left;
+        margin-left: 15px;
+        /*width:150px;*/
+    }
+    #fx_item.ffb{
+        width:320px !important;
+        top: 28px !important;
+    }
+    #fx_item_ctr .row .col1{
+        float:left;
+        /*width:50px;*/
+    }
+    #fx_item_ctr .row .col2{
+        float:left;
+        margin-left: 15px;
+        width:100px;
+    }
+    .frm_search input{margin-top:-1px;float:right;margin-left:2px}
+    .frm_search .btn{float:right;margin-left:5px}
+    .frm_search .btn span{padding:2px 10px;}
+    .search_choice a{font-weight:bold}
+    .search_choice a.active{color:#fb9338}
+    .search_choice {float:right;margin-right:95px}
+    #advance{display:none}
+    #filter{border-bottom: 1px dashed #DDD;}
+    #body_search{margin-top:10px}
+    .tname{font-size:110%}
+    #dyntable tbody tr td{border-right:none}
+    #dyntable tbody tr td + td + td {border-right:1px solid #DDD}
+    #dyntable tr:nth-child(even){
+        background:#F7F7F7;
+    }
+    .dataTables_scrollHead{
+        margin-bottom: -22px;
+    }
+    .dataTables_info{
+        margin-top: 20px;
+    }
+	.table_tr thead th{
+		height: 28px;
+		vertical-align: middle;
+		font-size: 13px;
+	}
+	.table_tr tbody th{
+		height: 28px;
+		vertical-align: middle;
+		font-size: 13px;
+	}
+    .alert{
+        background-color: transparent;
+        border: 0px;
+    }
+
+    #gritter-notice-wrapper{
+        right: 13%;
+        top: 100px;
+    }
+</style>
+<script type="text/javascript">
+$(function(){
+    $('.datepicker').datepicker({
+        minDate: '0',
+    });
+
+    $('#fx_item').flexbox(BASE+"/gudang/get_item", {
+        //method : 'POST',
+        paging: false,
+        showArrow: false ,
+        maxVisibleRows : 10,
+        width : 180,
+        resultTemplate: '<div class="col1">{id}</div><div class="col2">{name}</div>',
+        onSelect:function(){
+            $("#qty").focus();
+            $.getJSON(BASE+"gudang/get_item_harga/"+$("#fx_item_hidden").val(), function(json) {
+                $("#satuan").val(json.harga);
+                $("#unit").html(json.unit);
+            })
+        }
+
+    });
+
+});
+</script>
+
+<div id="gritter-notice-wrapper" class="alert hide" style="width:750px;position:fixed">
+    <div id="gritter-item-1" class="gritter-item-wrapper" style="margin:0 -17px 5px 0">
+        <div class="gritter-top"></div>
+        <div class="gritter-item">
+            <div class="gritter-close" style="display: none; width:50px "></div>
+            <img src="<?=base_url()?>assets/img/demo/envelope.png" class="gritter-image">
+            <div class="gritter-with-image" style="width:448px">
+                <span class="gritter-title" style="margin-left:36px">Message</span>
+                <p>Data Berhasil Disimpan   </p>
+            </div>
+            <div style="clear:both"></div>
+        </div>
+        <div class="gritter-bottom"></div>
+    </div>
+</div>
+
+<div class="container-fluid">
+	<div class="row-fluid">
+		<div class="span6" >
+			<div class="title"><h3>Pembelian Umum</h3></div>
+		</div>
+		<div class="span6">
+			<div class="widgetbox" style="margin-top:20px;">
+				<a class="btn btn-warning pull-right" href="<?php echo cur_url();?>data_pembelian_langsung">Data Pembelian</a>
+			</div>
+		</div>
+	</div>
+    <div class="row-fluid">
+        <div class="span12">
+            <div class="widget-box">
+                <?=form_open(cur_url().'simpan_pembelian_langsung',array('class' => 'form-horizontal form','id'=>'form')); ?>
+                    <div class="frm_trx" style="width:360px;padding:10px;height:155px;margin:0 auto;margin-top:20px;margin-bottom:20px;border:1px dashed #969696;color:#AAA">
+                        <div class="section">
+                            <label style="width:100px;margin-top:12px;padding-left:20px;float:left;">Item *</label>
+                            <div>
+                                <div style="float:left;margin-top:8px " name="fx_item" id="fx_item"></div>
+                                <!-- <button style="margin: 6px -2px;" id="" class="btn btn-warning"><i class="icon-search icon-white"></i></button>  -->
+                                <div class="clear"></div>
+                            </div>
+                        </div>
+                        <br clear="all">
+                        <label class="control-label" style="margin-left:-15%">Harga Satuan *</label>
+                        <div class="controls">
+                            <input type="text" style="width:120px;margin-left:-55px" id="satuan" autocomplete="off">
+                        </div>
+                        <div class="section">
+                            <label style="width:100px;margin-top: 12px;margin-left:20px;float:left">Jumlah</label>
+                            <div>
+                                <input type="text" name="" style="width:50px;margin-top:6px" id="qty" autocomplete="off"><span id="unit"></span>
+                            </div>
+                        </div>
+                        <br clear="all">
+                        <div class="section">
+                             <label style="width:100px;margin-top: 12px;margin-left:20px;float:left"></label>
+                            <div>
+                                <!-- <a class="btn" href="<?cur_url(-1);?>">clear</a> -->
+                                <a class="btn btn-info" id="tambah">tambah</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="widget-box" style="margin:10px;">
+                        <div class="widget-content" style="border:0">
+                            <table class="table table-bordered table-striped table_tr" id="tbTambah">
+                                <thead>
+                                    <tr>
+                                        <th style="width:75px;">Kode</th>
+                                        <th>Nama Obat</th>
+                                        <th style="width:75px">Jumlah</th>
+                                        <th style="width:150px">Harga Satuan</th>
+                                        <th style="width:150px">Total</th>
+                                        <th style="width:75px">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- <tr>
+                                        <td colspan="6">Data belum tersedia.</td>
+                                    </tr> -->
+                                </tbody>
+                            </table> 
+                        </br>
+                            <table class="table">
+                                <tbody>
+                                    <tr>
+                                        <td style="width:70%">&nbsp;</td>
+                                        <td style="width:10%">Sub Total</td>
+                                        <td><input type="text" readonly="readonly" id="tot" name="tot" autocomplete="off"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>&nbsp;</td>
+                                        <td>PPn</td>
+                                        <td><input type="text" readonly="readonly" id="ppn" name="ppn" autocomplete="off"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>&nbsp;</td>
+                                        <td>Grand Total</td>
+                                        <td><input type="text" readonly="readonly" id="grand" name="grand" autocomplete="off"></td>
+                                    </tr>
+                                </tbody>
+                            </table>                            
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button id="simpan" type="button" class="btn btn-primary pull-right">Simpan</button>
+                        <button style="margin-right:10px;" id="reset" class="btn pull-right" type="reset">Reset</button>
+                    </div>
+                </form>
+            </div>                      
+        </div>
+    </div>
+</div>
+</div>
+
+<script type="text/javascript">
+var count = 0;
+    $(function(){
+
+        $("#tambah").click(function(){
+            count += 1;
+                var nama    = $("#fx_item_input").val();
+                var item    = $("#fx_item_hidden").val();
+                var harga   = $("#satuan").val();
+                var qty     = $("#qty").val();
+                var unit     = $("#unit").html();
+                subtot = harga*qty;
+                $("<tr><td>"+item+"</td><td>"+nama+"</td><td style='text-align:center;width:40px'>"+qty+"</td><td style='text-align:right;width:70px'>"+harga+"</td><td style='text-align:right;width:100px'>"+subtot+"</td><td style='width:5px;text-align:center' class='del'><a href='' class='deletes' style=''><b class='icon-remove'></b></a></td><input id='rows"+count+"' name='rows[]' value='"+item+"|"+qty+"|"+harga+"|"+nama+"|"+unit+"' type='hidden'>").appendTo('#tbTambah tbody');
+                $("#fx_item_input").val("");
+                $("#qty").val("");
+                $("#satuan").val("");
+                calculate();
+                $("#fx_item_input").focus();
+                return false;
+        })   
+
+        $(".deletes").die('click').live('click',function(){
+            $(this).parent().parent().fadeOut(function(){
+                $(this).remove();
+                calculate();
+            })
+            return false;
+        })  
+
+	    function calculate(){
+	        var total = 0;
+	        var ppn = parseFloat(10);
+	        var ppn_total = ppn/100;
+	        $("#tbTambah tbody tr").each(function(){
+	            total += parseInt($(this).find('td:eq(4)').html());
+	        })
+	        var ppn_hasil = total*ppn_total;
+	        $("#tot").val(total);
+	        $("#ppn").val(ppn_hasil);
+	        $("#grand").val(total+ppn_hasil);
+	    }
+
+        $("#simpan").click(function(){
+            var url  = $("#form").attr('action');
+            var data = $("#form").serialize();
+            $.post(url,data, function(data){
+                $(".alert").fadeIn().delay(500).fadeOut(function(){
+                    window.location = "<?=cur_url()?>";
+                });     
+            }); 
+            return false;
+        });
+    })
+</script>

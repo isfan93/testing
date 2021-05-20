@@ -1,0 +1,70 @@
+<?php
+
+if (!defined('BASEPATH'))
+    exit('No direct script access allowed');
+
+class Rawat_inap extends MY_Controller {
+
+    function __construct() {
+        parent::__construct();
+        $this->load->model('rawat_inap_model', 'rim');
+        $this->load->model('rawat_jalan/poli_model', 'pm');
+    }
+
+    function index() {
+        $data['main_view'] = 'index';
+        $data['title'] = 'Rawat Inap';
+        $data['cf'] = $this->cf;
+        $data['is_fullpage'] = true;
+        $data['current'] = '';
+        $data['desc'] = 'Daftar Pasien Rawat Inap ';
+        $this->load->view('template', $data);
+    }
+
+    function pasien_ranap() {
+        $config['sTable'] = "trx_visit tv";
+        $config['aColumns'] = array("visit_in", "visit_id", "sd_name", "class_name", "room_id");
+        $config['aColumns_format'] = array("tv.visit_in", "tv.visit_id", "p.sd_name", "c.class_name", "r.room_id");
+        $config['php_format'] = array("datetime", "", "", "", "");
+        $config['join'][] = array('ptn_social_data p', 'p.sd_rekmed = tv.visit_rekmed');
+        $config['join'][] = array('hos_bed_occupation h', 'h.visit_id = tv.visit_id');
+        $config['join'][] = array('mst_bed b', 'b.bed_id = h.bed_id');
+        $config['join'][] = array('mst_room r', 'r.room_id = b.room_id');
+        $config['join'][] = array('mst_class c', 'c.class_id = r.class_id');
+        $config['where'][] = "tv.visit_out='0000-00-00 00:00:00'";
+        $config['key'] = "tv.visit_id";
+        $config['searchColumn'] = array("sd_name", "class_name", "room_id");
+        $config['aksi'] = array('stat' => false);
+        init_datatable($config);
+    }
+
+    function pemeriksaan($visit_id) {
+        $data['patient_data'] = $this->rim->getPatientData($visit_id);
+        $data['physicians'] = $this->rim->getPhysician();
+        $data['nurses'] = $this->rim->getNurses();
+        $data['title'] = 'Rawat Inap';
+        $data['is_fullpage'] = TRUE;
+        $data['main_view'] = 'pemeriksaan';
+        $this->load->view('template', $data);
+    }
+
+    function general_checkup($visit_id) {
+        $vital_sign = $this->rim->getVitalSign($visit_id);
+        $data['vital_sign'] = $vital_sign;
+        $patient_data = $this->rim->getPatientData($visit_id);
+        $data['vital_sign']['blood_type'] = $patient_data['sd_blood_tp'];
+        $this->load->view('general_checkup', $data);
+    }
+
+    function simpan_pemeriksaan() {
+        $result = $this->rim->saveExamination();
+        $success = $result ? 'success' : 'failed';
+        echo json_encode(array('success' => $success));
+    }
+
+    function checkout($visit_id){
+        $this->rim->checkOut($visit_id);
+        $this->rim->hospitalDischarge($visit_id);
+    }
+    
+}

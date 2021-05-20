@@ -1,0 +1,97 @@
+<script>
+    $(function(){
+        var lab_queue_id = "<?php echo $prev['lab_queue_id'];?>";
+        var surl = "<?=base_url()?>lab/load_form/"+lab_queue_id;
+        $(".finish").click(function(){
+            var url  = "<?=base_url()?>lab/finish_pemeriksaan";
+            var data = $("#form_penunjang").serialize();
+            $.post(url,data, function(data){
+                $(".alert").fadeIn().delay(500).fadeOut(function(){
+                    window.location.href = (document.referrer);
+                });     
+            }); 
+        })
+
+    });
+</script>
+<?=form_open(base_url().'lab/finish_pemeriksaan',array('class' => 'form-horizontal','id' => 'form_penunjang','enctype'=>'multipart/form-data','method'=>'POST')); ?>
+<input type="hidden" name="lab_queue_id" value=<?=$prev['lab_queue_id']?> >
+<label for="sd_name" class="control-label">Dokter Penanggung Jawab</label>
+<div class="controls">
+    <select class="input-medium" name="dr_id">
+        <?php 
+        if( $dokter->num_rows() >= 1 )
+        {
+            foreach ($dokter->result() as $key => $value) {
+                ?>
+                    <option value="<?php echo $value->id_employe;?>"><?php echo $value->dr_name;?></option>
+                <?php
+            }
+        }
+        ?>
+    </select>
+</div>
+<label for="sd_name" class="control-label">Operator</label>
+<div class="controls">
+   <select class="input-medium" name="operator_id">
+        <option value="1">Operator 1</option>
+        <option value="2">Operator 2</option>
+    </select>
+</div>
+<br clear="all">
+<!-- <div class="widget-content nopadding"> -->
+    <table id="penunjang" cellpadding="0" cellspacing="0" border="0" class="tabel-dokter table table-bordered table_tr" style="border-left:none;">
+        <thead>
+            <tr role="row">
+                <th class="" style="border-left:none;width:2%;">Nomor</th>
+                <th class="" style="width:20%;">Nama Pemeriksaan</th>
+                <th class="" style="width:40%;">Hasil</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php
+                if( $penunjang->num_rows() >= 1 ){
+                    foreach ($penunjang->result() as $key => $value) {
+                        ?>
+                        <tr>
+                            <td style="text-align:center;border-left:none;"><?=($key+1)?>.</td>
+                            <td><?=$value->ds_name?></td>
+                            <td>
+                                <?php
+                                if( ($penunjang_detail->num_rows() >= 1) ){
+                                    foreach ($penunjang_detail->result() as $k => $v) {
+                                        if( $v->trx_ds_id == $value->trx_ds_id ){
+                                            echo "<div style='float:left;width:30%;'>";
+                                            echo $v->dsupport_name;
+                                            echo "<br>";
+                                            echo "Nilai Rujukan : ";
+                                            echo $v->dsupport_standart_value;
+                                            echo $v->dsupport_satuan;
+                                            echo "<br>";
+                                            echo "</div>";
+                                            echo "<div style='float:left;width:40%;'>";
+                                            echo "<input type='text' name='hasil[$v->dsupport_code]' class='input input-small' id='' placeholder='Hasil' value='$v->dsupport_value' autocomplete='off'>";
+                                            echo "</div>";
+                                            echo "<div style='float:left;width:20%;'>";
+                                            echo "<input type='file' name='image[$v->dsupport_code]' class='input input-small'>";
+                                            echo "</div>";
+                                            echo "<br clear='all'>";
+                                            echo "<br clear='all'>";
+                                        }
+                                    }
+                                } 
+                                ?>
+                            </td>
+                        </tr>
+                        <?php
+                    }
+                }
+            ?>
+        </tbody>
+    </table>                            
+<!-- </div> -->
+<div class="form-actions" style="margin-bottom:0px;margin-top:0px;">
+    <!-- <button type="button" class="btn btn-primary pull-right finish" style="margin-left:10px;" >Finish Pemeriksaan Lab</button> -->
+    <button type="submit" class="btn btn-primary pull-right" >Simpan & Selesai</button>
+</div>
+<?=form_close()?> 

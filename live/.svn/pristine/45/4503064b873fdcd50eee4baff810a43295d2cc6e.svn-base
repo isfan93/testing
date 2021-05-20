@@ -1,0 +1,79 @@
+<?php
+    $i = 0;
+    $total  = 0;
+    foreach ($resep_pasien->result() as $key => $value) {
+        $i++;
+        ?>
+            <tr>
+                <td style="text-align:center;width:5%;">
+                    <div class="hidden">
+                        <input type="hidden" name="" class="mdc_id" value="<?=$value->mdc_id?>" >
+                        <input type="hidden" name="" class="old_im_id" value="<?=$value->recipe_medicine?>" >
+                    </div>
+                    <?=$i?>
+                </td>
+                <td style="width:30%;">
+                    <div class='shows'><?=$value->im_name?></div>
+                    <div class='hiddens'>
+                        <select name="" class="recipe_medicine">
+                            <?php
+                            foreach ($medicine->result() as $k => $v) {
+                                $selected = '';
+                                if( $value->recipe_medicine == $v->im_id)
+                                    $selected = 'selected';
+                                else
+                                    $selected = '';
+                                ?>
+                                <option value="<?=$v->im_id?>" <?=$selected?> ><?=$v->im_name?></option>
+                                <?php
+                            }
+                            ?>
+                        </select>
+                    </div>
+                </td>
+				<td style="text-align:center;width:15%;">
+                    <div class='shows'><?=$value->recipe_rule?></div>
+                    <div class="hiddens"><input type="text" name="" class="recipe_rule" value="<?=$value->recipe_rule?>"></div>
+                </td>
+                <td style="text-align:left;width:15%;">
+                    <div class='shows'><?=$value->recipe_note?></div>
+                    <div class="hiddens"><input type="text" name="" class="recipe_note" value="<?=$value->recipe_note?>"></div>
+                </td>
+                <td style="text-align:center;">
+                    <div class='shows'><?=$value->recipe_qty?> <?=$value->mtype_name?></div>
+                    <div class="hiddens"><input type="text" class="input input-mini recipe_qty" name="" value="<?=$value->recipe_qty?>"><?=$value->mtype_name?></div>
+                </td>
+                 <td style="text-align:right;width:15%;">
+                    <div class='shows'><?php echo number_format(($value->im_item_price * $value->recipe_qty), 2, ",", ".");?></div>
+                    <div class="hiddens"><?=($value->im_item_price * $value->recipe_qty)?></div>
+                    <?php $total += ($value->im_item_price * $value->recipe_qty); ?>
+                </td>
+                <?php
+                if( $status_bayar_resep == 0)
+                {
+                    ?>
+    				<td style="text-align:center;">
+                        <div class='shows'>
+                            <a class="buttons btn_pencil" style="" href="<?=base_url()?>apotek/resep_pasien/edit_list/<?=$value->mdc_id?>/<?=$value->recipe_medicine?>"></a>
+                            <a class="buttons btn_trash" style="margin-left:10px;" href="<?=base_url()?>apotek/resep_pasien/delete_list/<?=$value->mdc_id?>/<?=$value->recipe_medicine?>"></a>
+                        </div>
+                        <div class="hiddens">
+                            <input type="button" value="Simpan" class="submitEdit radius2 btn btn-primary"> 
+                        </div> 
+                    </td>
+                    <?php 
+                }else{
+                    ?>
+                    <td></td>
+                    <?php
+                }
+                ?>
+			</tr>
+		<?php
+	}
+?>
+<tr id="total">
+    <td colspan="5" style="font-weight:bold;text-align:right;">Total</td>
+    <td style="font-weight:bold;text-align:right;"><?php echo number_format(($total), 2, ",", ".");?></td>
+    <td></td>
+</tr>

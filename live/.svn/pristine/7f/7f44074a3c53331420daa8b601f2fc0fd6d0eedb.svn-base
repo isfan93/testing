@@ -1,0 +1,124 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class Kasir extends MY_Controller {
+
+	function __construct() {
+		parent::__construct();
+		$this->cf = array(
+				'modul_id'	=> 4
+		);
+
+		// model 
+		$this->load->model('kasir_model','kasir_model');
+
+	}
+
+	public function index(){
+		$data['main_view']	= 'index';
+		$data['title']		= 'Kasir ';
+		$cf					= $this->cf;
+		$data['cf']			=  $cf;
+		$this->load->view('template',$data);
+	}
+
+	function get_transaksi($visit_status = 3){
+		$config['sTable']		= "trx_visit tv ";
+		$config['aColumns']		= array("visit_in","visit_rekmed","sd_name","visit_type","total_price");
+		$config['aColumns_format']	= array("tv.visit_in,psd.sd_name,tv.visit_rekmed,tv.visit_type,sum(tvb.total_price) as total_price");
+		$config['php_format']	= array("date","","strtoupper","strtoupper","money");
+		$config['key']			= "sd_rekmed";
+		$config['group']		= "tv.visit_rekmed";
+		if( $visit_status != 3){
+			$config['where'][]		= "tv.visit_status = $visit_status";
+			$config['where'][]		= "tvb.payment_status = 0";
+			$config['aksi']			= array(
+									'stat'  	=> true,
+									'key'		=> 'visit_rekmed',
+									// 'pilih'	=> base_url().'kasir/detail/',
+									);
+		}
+		else{
+			$config['where'][]		= "tv.visit_status = $visit_status";
+			$config['where'][]		= "tvb.payment_status = 0";
+			$config['aksi']			= array(
+									'stat'  	=> true,
+									'key'		=> 'visit_rekmed',
+									'pilih'	=> base_url().'kasir/detail/',
+									);
+		}
+		$config['sOrder'][]		= array("tv.visit_in,desc");
+		$config['leftjoin'][]		= array("ptn_social_data psd","psd.sd_rekmed = tv.visit_rekmed");
+		$config['join'][]		= array("trx_visit_bill tvb","tvb.visit_id = tv.visit_id");
+		$config['searchColumn']	= array("tv.sd_rekmed");
+		
+		init_datatable($config);
+	}
+
+	function detail($sd_rekmed)
+	{
+		$data['main_view']	= 'kasir/detail_transaksi';
+		$data['title']		= 'Kasir ';
+		$cf					= $this->cf;
+		$data['cf']			= $cf;
+		$data['patient']	= $this->db->get_where('ptn_social_data',array('sd_rekmed'=>$sd_rekmed))->row();
+		$trx_visit_bill_detail	= $this->kasir_model->get_detail_bill($sd_rekmed);
+		foreach ($trx_visit_bill_detail->result() as $key => $value) {
+				$data['trx_visit_bill_detail'][$value->service_id][]	= $value;
+		}
+		$data['mst_bill']	= $this->db->get('mst_service');
+		$data['insurance']	= $this->db->get('mst_insurance');
+		$data['sd_rekmed']	= $sd_rekmed;
+		$data['visit_id']	= $this->db->get_where('trx_visit',array('visit_rekmed'=>$sd_rekmed,'visit_status'=>3))->row()->visit_id;
+		$this->load->view('template',$data);
+	}
+
+	function bayar(){
+		$visit_id 	= $this->input->post('visit_id');
+
+		// update trx_visit_bill tindakan => sudah dibayar (1)
+		$data['payment_status']	= 1;
+		$data['cashier_id']		= get_user('emp_id');
+		$this->db->where(array('visit_id'=>$visit_id,'payment_status'=>0));
+		$this->db->update('trx_visit_bill',$data);
+
+		$dt_visit['visit_status'] = 4;
+		$dt_visit['visit_out']	= date('Y-m-d H:i:s');
+		$this->db->where('visit_id',$visit_id);
+		$this->db->update('trx_visit',$dt_visit);
+
+		// cek is rajal
+		// if( $this->kasir_model->is_type_medical($visit_id,'rajal') )
+		// {
+		// 	// update queo_status
+		// 	$dt_queo['queo_status'] = 3;
+		// 	$this->db->where('queo_id',$visit_id);
+		// 	$this->db->update('trx_queue_outpatient',$dt_queo);
+		// }
+		// cek is lab
+		if( $this->kasir_model->is_type_medical($visit_id,'lab') )
+		{
+			// update queo_status
+			$dt_queo['lab_queue_status'] = 2;
+			$this->db->where('lab_queue_id',$visit_id);
+			$this->db->update('trx_lab_queue',$dt_queo);
+		}
+	}
+
+	function cetak_nota($visit_id,$sd_rekmed)
+	{
+		$data['title']	= 'Nota Pembayaran';
+		$data['patient']	= $this->db->get_where('ptn_social_data',array('sd_rekmed'=>$sd_rekmed))->row();
+		$trx_visit_bill_detail	= $this->kasir_model->get_detail_bill($sd_rekmed);
+		foreach ($trx_visit_bill_detail->result() as $key => $value) {
+			$data['trx_visit_bill_detail'][$value->service_id][]	= $value;
+		}
+		$data['mst_bill']	= $this->db->get('mst_service');
+		$data['insurance']	= $this->db->get('mst_insurance');
+		$data['sd_rekmed']	= $sd_rekmed;
+		$this->load->view('kasir/nota',$data);
+	}
+
+
+} // end class
+
+

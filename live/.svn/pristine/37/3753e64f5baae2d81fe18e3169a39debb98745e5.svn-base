@@ -1,0 +1,114 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class Rawat_jalan extends MY_Controller {
+
+	function __construct() {
+		parent::__construct();
+	}
+
+	public function index(){
+		$data['main_view']	= 'rawat_jalan/index';
+		$data['title']		= 'Kasir Rawat Jalan';
+		$data['desc']		= 'Description. ';
+		$data['cf']			=  $this->cf;
+		$this->load->view('template',$data);
+	}
+
+	function detail_transaksi($mdc_id){
+		$data['main_view']	= 'rawat_jalan/transaksi';
+		$data['title']		= 'Detail Transaksi';
+		$cf					= $this->cf;
+		$data['cf']			=  $cf;
+		$data['insurance']	= $this->db->get('mst_insurance')->result();
+
+		$trx_medical 		= $this->db->where('mdc_id',$mdc_id)->get('trx_medical')->row();
+		$data['trx_medical']= $trx_medical;
+		$data['patient']	= $this->db->where('sd_rekmed',$trx_medical->sd_rekmed)->get('ptn_social_data')->row();
+		$data['medical_id'] = $mdc_id;
+		//parsing detail bill
+		$data['mst_bill'] 	= $this->db->get('mst_bill')->result();
+		$trx_bill 	= $this->db->where('mdc_id',$mdc_id)->get('trx_bill');
+		if( $trx_bill->num_rows() >= 1 ){
+			foreach ($trx_bill->result() as $key => $value) {
+				$data['trx_bill'][$value->bill_id][] = $value;
+			}
+		}
+		$resep 		= $this->db->get_where('trx_recipe',array('mdc_id'=>$mdc_id))->result();
+		$tindakan 	= $this->db->get_where('trx_diagnosa_treathment_detail',array('mdc_id'=>$mdc_id))->result();
+		$dokter_fee	= 0;
+		foreach ($resep as $key => $value) {
+			$dokter_fee += $value->recipe_paramedic_price;
+		}
+		foreach ($tindakan as $key => $value) {
+			$dokter_fee += $value->dat_paramedic_price;
+		}
+		$data['dokter_fee'] = $dokter_fee;
+		$this->load->view('template',$data);	
+	}
+
+	// function get_detail_transaksi($mdc_id,$bill_id){
+	// 	$data['detail'] = $this->db->query("select * from trx_bill where mdc_id = '$mdc_id' and bill_id ='$bill_id'")->result();
+	// 	$this->load->view('rawat_jalan/detil_transaksi',$data);
+
+	// }
+
+	function bayar(){
+		$data = $this->input->post('ds');
+		$sd_rekmed = $data['sd_rekmed'];
+		foreach ($data as $i => $v) {
+			if($i !== 'mdc_id' && $i !== 'note' && $i !== 'ins_no' && $i !== 'ins_id'){
+				$data[$i] = preg_replace('/[^0-9]/', '', $v)/100;
+			}
+		}
+		// update mdc_status
+		$data['mdc_status'] = 3;
+		unset($data['sd_rekmed']);
+		$this->db->where('mdc_id', $data['mdc_id']);
+		$this->db->update('trx_medical', $data); 
+		// update queo_status
+		$dt_queo['queo_status'] = 3;
+		$this->db->where('queo_id',$data['mdc_id']);
+		$this->db->update('trx_queue_outpatient',$dt_queo);
+	} 
+
+	function cetak_nota($mdc_id){
+		$trx_medical 		= $this->db->where('mdc_id',$mdc_id)->get('trx_medical')->row();
+		$data['trx_medical']= $trx_medical;
+		$data['patient']	= $this->db->where('sd_rekmed',$trx_medical->sd_rekmed)->get('ptn_social_data')->row();
+		$data['medical_id'] = $mdc_id;
+		//parsing detail bill
+		$data['mst_bill'] 	= $this->db->get('mst_bill')->result();
+		$trx_bill 	= $this->db->where('mdc_id',$mdc_id)->get('trx_bill');
+		if( $trx_bill->num_rows() >= 1 ){
+			foreach ($trx_bill->result() as $key => $value) {
+				$data['trx_bill'][$value->bill_id][] = $value;
+			}
+		}
+		$resep 		= $this->db->get_where('trx_recipe',array('mdc_id'=>$mdc_id))->result();
+		$tindakan 	= $this->db->get_where('trx_diagnosa_treathment_detail',array('mdc_id'=>$mdc_id))->result();
+		$this->load->view('kasir/rawat_jalan/nota',$data);
+	}
+
+	// function cetak($mdc_id, $sd_rekmed){
+	// 	$data['main_view']	= 'kasir/cetak_kasir';
+	// 	$data['patient']	= $this->db->where('sd_rekmed',$sd_rekmed)->get('ptn_social_data')->row();
+	// 	$data['detail']		= $this->db->where('medic',$mdc_id)->get('v_trx_bill4')->result();
+	// 	$data['total']		= $this->db->where('mdc_id',$mdc_id)->get('trx_medical')->row();
+	// 	$this->load->view('template_print',$data);
+	// }
+
+	function get_medical($mdc_status = 2){
+		$config['sTable'] 			= 'v_medical_bill';
+		$config['aColumns'] 		= array('day_date','sd_name','pl_name','total_amount','total_pay');
+		$config['key'] 				= 'mdc_id';
+		$config['where'][]			= ("mdc_status = '$mdc_status'");
+		$config['php_format'] 		= array('date','','','money','money');
+		$config['searchColumn'] 	= array('day_date','sd_name');
+		$config['aksi'] = array(
+								'stat'  	=> true,
+								'key'		=> 'mdc_id',
+								'pilih'	=> base_url().'kasir/rawat_jalan/detail_transaksi/',
+								);
+		init_datatable($config);
+	}
+}

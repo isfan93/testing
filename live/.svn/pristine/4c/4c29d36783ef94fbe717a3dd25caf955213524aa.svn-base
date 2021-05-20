@@ -1,0 +1,142 @@
+<style>
+    #patientData td{padding:3px;}
+    #patientData .colon{width:5px}
+    .page_footer {
+        background-color: #cdcdcd;
+        margin-top: 20px;
+    }
+    .page_footer button {
+        float: right;
+        margin: 10px;
+    }
+</style>
+<div class="container-fluid">
+    <!--div untuk data pasien-->
+    <div class="row-fluid">
+        <div class="span12" style="background:#E5E5E5;padding:0px 10px 10px 10px">
+            <div class="title" style="margin-left:0px"><h3>Data Pasien</h3></div>
+            <div class="pull-right"><button id="checkOut" style="margin:10px" class="btn btn-small btn-danger"><i class="icon-ok icon-white"></i> Check Out</button></div>
+            <table id="patientData" style="width:100%;font-weight:bold">
+                <tr>
+                    <td style="width:10%">No Rekam Medis</td>
+                    <td class="colon">:</td>
+                    <td style="width:40%"><?= $patient_data['sd_rekmed'] ?></td>
+                    <td style="width:10%">Riwayat Alergi</td>
+                    <td class="colon">:</td>
+                    <?php $allergy = $patient_data['sd_alergi'] != NULL ? $patient_data['sd_alergi'] : '-' ?>
+                    <td rowspan="2" style="vertical-align:top"><?= $allergy ?></td>
+                </tr>
+                <tr>
+                    <td style="width:10%">Nama</td>
+                    <td class="colon">:</td>
+                    <td style="width:40%"><?= $patient_data['sd_name'] ?></td>
+                </tr>
+                <tr>
+                    <td style="width:10%">Tanggal Masuk</td>
+                    <td class="colon">:</td>
+                    <?php $visit_date = pretty_date($patient_data['visit_in'], true) ?>
+                    <td style="width:40%"><?= $visit_date ?></td>
+                    <td style="width:10%">Riwayat Penyakit</td>
+                    <td class="colon">:</td>
+                    <?php $disease = $patient_data['sd_riwayat_penyakit'] != NULL ? $patient_data['sd_riwayat_penyakit'] : '-' ?>
+                    <td rowspan="3" style="vertical-align:top"><?= $disease ?></td>
+                </tr>
+                <tr>
+                    <td style="width:10%">Jenis Kelamin / Usia</td>
+                    <td class="colon">:</td>
+                    <?php $sex = $patient_data['sd_sex'] == 'L' ? 'Laki - Laki' : 'Perempuan' ?>
+                    <td style="width:40%"><?= $sex ?> / <?= $patient_data['sd_age'] ?> tahun</td>
+                </tr>
+                <tr>
+                    <td style="width:10%">Alamat</td>
+                    <td class="colon">:</td>
+                    <td style="width:40%"><?= $patient_data['sd_address'] ?></td>
+                </tr>
+            </table>
+
+        </div>
+    </div>
+    <!--div untuk dokter penanggung jawab dan suster penanggung jawab-->
+    <div class="row-fluid" style="margin-top:10px">
+        <div class="span6">
+            <label><b>Tanggal Pemeriksaan</b> : <?= pretty_date(date('Y-m-d'), false); ?></label>
+        </div>
+        <div class="span6">
+            <?= form_open('#', array('id' => 'pic', 'class' => 'form-inline')) ?>
+            <div class="pull-right" style="margin-left:20px">
+                <label style="vertical-align:top">Perawat : </label>
+                <select id="nurse" name="nurse" class="chosen-select">
+                    <option value="" selected="selected">-- Pilih Perawat --</option>
+                    <?php if (!empty($nurses)) : ?>
+                        <?php foreach ($nurses as $nurse) : ?>
+                            <option value="<?= $nurse['id_employe'] ?>"><?= $nurse['sd_name'] ?></option>
+                        <?php endforeach ?>
+                    <?php endif; ?>
+                </select>
+            </div>
+            <div class="pull-right">
+                <label style="vertical-align:top">Dokter : </label>
+                <select id="physician" name="physician" class="chosen-select">
+                    <option value="" selected="selected">-- Pilih Dokter --</option>
+                    <?php if (!empty($physicians)) : ?>
+                        <?php foreach ($physicians as $physician) : ?>
+                            <option value="<?= $physician['id_employe'] ?>"><?= $physician['sd_name'] ?></option>
+                        <?php endforeach ?>
+                    <?php endif; ?>
+                </select>
+            </div>
+        </div>
+        <?= form_close() ?>
+    </div>
+    <!--div untuk menu utama-->
+    <div class="row-fluid">
+        <div class="span12">
+            <div id="tabs" class="ui-tabs ui-widget ui-widget-content ui-corner-all" style="background-color:white;padding-left:0px;margin-left:0px;" >
+                <ul class="ui-tabs-nav ui-helper-reset ui-helper-clearfix ui-widget-header ui-corner-all" style="padding-left:0px;margin-left:0px;">
+                    <li id="generalCheckup" class="ui-state-default ui-corner-top ui-state-active ui-tabs-selected"><a href="#">General Checkup</a></li>
+                    <li id="history" class="ui-state-default ui-corner-top"><a href="#">Riwayat Pemeriksaan</a></li>                    
+                    <li id="payment" class="ui-state-default ui-corner-top"><a href="#">Pembayaran</a></li>
+                </ul>
+                <div id="page" style="padding:5px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<?php $this->load->view('notice') ?>
+
+<link rel="stylesheet" href="<?= base_url() ?>assets/css/chosen.css" />
+<script src="<?= base_url() ?>assets/js/jquery.chosen.js"></script>
+<script>
+    $(document).ready(function () {
+        $('.chosen-select').chosen({no_results_text: "data tidak ditemukan!"});
+        $('.ui-state-default').click(function () {
+            $('.ui-state-default').removeClass('ui-state-active ui-tabs-selected');
+            $(this).addClass('ui-state-active ui-tabs-selected');
+        });
+
+        $('#generalCheckup').click(function () {
+            $('#page').load('<?= base_url() ?>rawat_inap/general_checkup/' + '<?= $patient_data['visit_id'] ?>');
+        });
+
+        $("#generalCheckup").trigger('click');
+
+        $('.submit-form').live('click', function (e) {
+            e.preventDefault();
+            var data = $('#pic').serialize();
+            data += '&' + $('#vitalSignForm').serialize();
+            data += '&' + $('#subObjForm').serialize();
+            data += '&' + $('#diagnoseForm').serialize();
+            data += '&' + $('#prescriptionForm').serialize();
+            var url = $(this).attr('data-url');
+            $.post(url, data, function (response) {
+                response = JSON.parse(response);
+                if ("success" === response.success) {
+                    $("#gritter-notice-wrapper").fadeIn().delay(300).fadeOut(function () {
+                        location.reload(true);
+                    });
+                }
+            });
+        });
+    });
+</script>

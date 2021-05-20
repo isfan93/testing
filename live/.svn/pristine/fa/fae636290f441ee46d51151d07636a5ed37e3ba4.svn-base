@@ -1,0 +1,123 @@
+<link rel="stylesheet" href="<?=base_url()?>assets/css/jquery.gritter.css" />
+<style type="text/css" media="screen">
+    .ffb{
+        width: 600px !important;
+    }
+    #fx_item.ffb{
+        width:350px !important;
+        top: 28px !important;
+    }
+    #fx_item_ctr .row .col1{
+        float:left;
+        width:10px;
+    }
+    #fx_item_ctr .row .col2{
+        float:left;
+        margin-left: 15px;
+        width:220px;
+    }
+    .ffb-input{
+        width: 305px !important;
+    }
+</style>
+<div class="row-fluid">
+    <div class="span9">
+        <div class="widget-box">
+            <div class="widget-title">
+                <span class="icon">
+                    </h5><i class="icon-th-list"></i></h5>
+                </span>
+                <h5>Radiologi</h5>
+            </div>
+            <?= form_open(base_url() . 'lab/daftar_rad', array('class' => 'form-horizontal', 'id' => 'registrationFinal')); ?>
+			 <?= form_hidden('sd_rekmed', $patient->sd_rekmed) ?>
+            <?= form_hidden('is_new_patient', $is_new_patient ? 1 : 0) ?>
+            <?= form_hidden('request_new_card', 0) ?>
+            <label class="control-label">No.Rekam Medis</label>
+            <div class="controls">
+                <label style="margin-top:3px"><?= $patient->sd_rekmed ?></label>
+            </div>
+            <label class="control-label">Nama Pasien</label>
+            <div class="controls">
+                <label style="margin-top:3px"><?= $patient->sd_name ?></label>
+            </div>
+            <div id="penunjang">
+               
+            </div>
+            <div style="margin:10px;">
+                <button type="button" class="btn btn-warning btn-small tbh" style="margin-left:45%;">Tambah</button>
+            </div>
+			<?= form_close() ?>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+$(function(){
+    var i = 0;
+    
+    $('.tbh').click(function(){
+        add();
+    });
+
+    function add(){
+        i++;
+        var str = ("<label class='control-label'>Pemeriksaan "+i+"</label>");
+            str += ("<div class='controls'>");
+            str += ("<div id='"+i+"_fx_penunjang' class='fx_penunjang'><input type='hidden' id='"+i+"_harga' name='harga[]' class='harga' ><input type='hidden' id='"+i+"_nama_penunjang' name='nama_penunjang[]' class='nama_penunjang' >");
+            str += ("</div");
+            $("#penunjang").append(str);
+            $('#'+i+'_fx_penunjang').flexbox(BASE+'lab/get_tindakan_rad',{
+                paging: false,
+                showArrow: false ,
+                maxVisibleRows : 0,
+                width : 300,
+                resultTemplate: '{id} - {name} - {harga}',
+                onSelect: function() {
+                    var id = $(this).parent().find('input:eq(2)').val();
+                    var id_harga = $(this).parent().find('input:eq(0)').attr('id');
+                    var id_nama_penunjang = $(this).parent().find('input:eq(1)').attr('id');
+                    $.getJSON(BASE+"lab/json_get_penunjang/"+id, function(json) {
+                        $("#"+id_harga).val(json.harga);
+                        $("#"+id_nama_penunjang).val(json.name);
+                    })
+                    $('#regFinish').removeAttr('disabled');
+                }
+            });
+        $(".fx_penunjang").find('input:eq(2)').attr('name','penunjang[]');
+    }
+
+    $("#noKartu").keyup(function(){
+        var noKartu = $(this).val();
+        var crsf = $('.crsf').val();
+        var crsfName = $('.crsf').attr('name');
+        if( noKartu.length == 8 )
+        {
+            $.ajax({
+                url: "<?= base_url() ?>lab/getPatientData",
+                type: 'post',
+                dataType: "json",
+                data: crsfName+"="+crsf+'&noKartu='+noKartu,
+                success: function(result) {
+                    if( result.success == 1)
+                    {
+                        $("#sd_rekmed").val(result.sd_rekmed);
+                        $("#sd_name").val(result.sd_name);
+                        $("#sd_address").val(result.sd_address);
+                        $("#simpan").removeAttr('disabled');
+                    }else{
+                        $("#sd_rekmed").val('');
+                        $("#sd_name").val('');
+                        $("#sd_address").val('');
+                        $("#simpan").attr('disabled','disabled');
+                    }
+                }
+            });
+        }
+    });
+
+    for(var j = i+1; j <= 5; j++) {
+        add();
+    };
+
+});
+</script>

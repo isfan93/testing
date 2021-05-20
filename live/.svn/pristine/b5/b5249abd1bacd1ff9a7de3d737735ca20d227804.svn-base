@@ -1,0 +1,107 @@
+<style type="text/css" media="screen">
+	.noborder tr td{
+		border: 0px !important;
+	}
+	.table_tr thead th{
+		height: 28px;
+		vertical-align: middle;
+		font-size: 13px;
+	}
+	.table_tr tbody th{
+		height: 28px;
+		vertical-align: middle;
+		font-size: 13px;
+	}
+</style>
+<script type="text/javascript" charset="utf-8">
+	$(function(){
+		$('#back').click(function(){
+			window.history.back();
+		});
+	});
+</script>
+<div class="container-fluid">
+	<div class="row-fluid">
+		<div class="span3" >
+			<div class="title"><h3><?php echo $title;?></h3></div>
+		</div>
+	</div>
+	<br clear="all">
+	<div class="row-fluid">
+		<div class="widget-box">
+			<div class="span12">
+				<table class="table noborder" style="width:30%;float:left;">
+				    <tbody>
+					    <tr>
+					    	<td style="width:100px;">No. Retur</td>
+					    	<td>: <?php echo $retur->ir_id;?></td>
+					    </tr>
+					    <tr>
+					    	<td>Supplier</td>
+					    	<td>: <?php echo $retur->msup_name;?></td>
+					    </tr>
+					    <tr>
+					    	<td>Tanggal Retur</td>
+					    	<td>: <?php echo pretty_date($retur->ir_date_req,false);?></td>
+					    </tr>
+					    <tr>
+					    	<td>PPN</td>
+					    	<td>: <?php echo $retur->ir_ppn;?></td>
+					    </tr>
+					    <tr>
+					    	<td>Petugas</td>
+					    	<td>: <?php echo $retur->ir_operator;?></td>
+					    </tr>
+					    <tr>
+					    	<td>Catatan</td>
+					    	<td>: <?php echo $retur->ir_note;?></td>
+					    </tr>
+				    </tbody>
+				</table>
+				<table class="table table-bordered table-stripped table_tr" style="width:68%;float:left;margin:10px;">
+				    <thead>
+					   <tr>
+					   		<th>Kode Item</th>
+					   		<th>Nama Item</th>
+					   		<th>Jumlah</th>
+					   		<th>Harga Satuan</th>
+					   		<th>Sub Total</th>
+					   </tr>
+				    </thead>
+				    <tbody>
+				    	<?php
+				    	if( !empty($detail) ){
+				    		$total 	= $grandTotal = $PPN = 0;
+					    	foreach ($detail->result() as $key => $value):
+					    		$subTotal = ($value->ir_qty * $value->im_item_price_buy);
+					    		$total += ($value->ir_qty * $value->im_item_price_buy);
+					    		$grandTotal = ($total);
+					    		?>
+					    		<tr>
+					    			<td><?php echo $value->im_id;?></td>
+					    			<td><?php echo $value->im_name;?></td>
+					    			<td style="text-align:center;"><?php echo $value->ir_qty;?> <?php echo $value->im_unit;?></td>
+					    			<td style="text-align:right;"><?php echo number_format(($value->im_item_price_buy), 2, ",", ".");?></td>
+					    			<td style="text-align:right;"><?php echo number_format(($subTotal), 2, ",", ".");?></td>
+					    		</tr>
+					    		<?php
+					    	endforeach;
+					    	?>
+					    	<tr>
+					    		<td colspan="4" style="text-align:right;font-weight:bold;">Grand Total</td>
+					    		<td colspan="4" style="text-align:right;font-weight:bold;"><?php echo number_format(($grandTotal), 2, ",", ".");?></td>
+					    	</tr>
+					    	<?php
+					    }
+				    	?>
+				    </tbody>
+				</table>
+			</div>
+			<br clear="all">
+            <div class="form-actions" style="margin-bottom:0px;">
+                <a id="cetak" href="<?=base_url()?>gudang/retur/cetak_retur/<?=$retur->ir_id?>" target="_blank" class="btn btn-primary pull-right">Cetak</a>
+                <button id="back" class="btn pull-right" type="reset" style="margin-right:10px;">Kembali</button>
+            </div>
+		</div>
+	</div>
+</div>

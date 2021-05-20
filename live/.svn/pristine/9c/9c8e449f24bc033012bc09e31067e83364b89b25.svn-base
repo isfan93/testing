@@ -1,0 +1,92 @@
+<style type="text/css" media="screen">
+	.frm_search input{margin-top:-1px;float:right;margin-left:2px}
+	.frm_search .btn{float:right;margin-left:5px}
+	.frm_search .btn span{padding:2px 10px;}
+	.search_choice a{font-weight:bold}background-color:#d9edf7;
+	.search_choice a.active{color:#fb9338}
+	.search_choice {float:right;margin-right:95px}
+	#advance{display:none}
+	#filter{border-bottom: 1px dashed #DDD;}
+	#body_search{margin-top:10px}
+	.tname{font-size:110%}
+	#dyntable tbody tr td{border-right:none}
+	/*#dyntable tbody tr td + td + td{border-right:1px solid #DDD}*/
+	#dyntable tr:nth-child(even){
+		background:#F7F7F7;
+	}
+	.dataTables_scrollHead{
+		margin-bottom: -22px;
+	}
+	.dataTables_info{
+		margin-top: 20px;
+	}
+	.table_tr tbody th{
+		height: 28px;
+		vertical-align: middle;
+		font-size: 13px;
+	}
+	.table_tr tbody th{
+		height: 28px;
+		vertical-align: middle;
+		font-size: 13px;
+	}
+	td.money{
+		text-align: right;
+	}
+</style>
+<div class="container-fluid">
+	<div class="row-fluid">
+		<div class="span5" >
+			<div class="title"><h3><?=$title?></h3></div>
+		</div>
+		<div class="span7">
+			<div style="margin-top:15px;">
+				<form class="form-horizontal pull-right">
+					<label class="control-label">Tahun Pelaporan</label>
+		            <div class="controls">
+		                <select  name="" id="tahun" class="input input-small">
+		                    <option>2014</option>
+		                    <option>2015</option>
+		                    <option>2016</option>
+		                    <option>2017</option>
+		                    <option>2018</option>
+		                    <option>2019</option>
+		                    <option>2020</option>
+		                    <option>2021</option>
+		                    <option>2022</option>
+		                </select>
+		            </div>
+		        </form>
+	        </div>
+		</div>
+	</div>
+	<br clear="all">
+	<div class="row-fluid">
+		<div class="span12">
+			<div id="laporan">
+				
+			</div>
+		</div>
+		<div class="form-actions" style="margin-bottom: 0px;background:none;">
+		    <button type="submit" style="" class="btn btn-primary simpan pull-right">Cetak</button>
+		</div>
+	</div>
+</div>
+<div class="black_loader">
+	<img src="<?=get_loader(11)?>">
+</div>
+
+<script type="text/javascript">
+	$(function(){
+		$("#tahun").change(function(){
+			var tahun = $(this).val();
+			$(".black_loader").fadeIn(300).delay(1000).fadeOut(function(){
+				var url = '<?=cur_url(-1)?>get_hasil_usaha/'+tahun;
+				$(".title h3").html("Laporan Hasil Usaha Tahun "+tahun);
+		    	$("#laporan").load(url);
+			});
+		});
+
+		$("#tahun").trigger('change');
+	});
+</script>

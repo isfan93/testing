@@ -1,0 +1,54 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class Pembelian_umum extends MY_Controller {
+	function __construct() {
+		parent::__construct();
+		
+		// modul id
+		$this->cf = array(
+			'modul_id'	=> 9
+		);
+
+		// local variable
+
+		// model 
+		$this->load->model('pelaporan_model');
+
+		// keterangan kode
+
+	}
+
+	function index(){
+		$data['main_view']	= 'pelaporan/pembelian_umum/index';
+		$data['title']		= 'Pembelian Umum';
+		$data['cf']			=  $this->cf;
+		$data['current']	= '';
+		$data['desc']		= 'Description. ';
+		$this->load->view('template',$data);
+	}
+
+
+
+	function get_kunjungan_pembelian_umum($visit_status = 4){
+
+		$config['sTable']		= "trx_visit t";
+		$config['aColumns']		= array("visit_in","tdb_number","sd_name","visit_type");
+		$config['aColumns_format']	= array("t.visit_in","tdb.tdb_number","me.sd_name","t.visit_type");
+		$config['php_format']	= array("date","","strtoupper","strtoupper","strtoupper");
+		$config['key']			= "t.visit_id";
+		$config['join'][]		= array("trx_direct_buy tdb","tdb.visit_id = t.visit_id");
+		// $config['join'][]		= array("trx_visit_bill tvb","tvb.visit_id = t.visit_id");
+		// $config['join'][]		= array("mst_insurance msti","tvb.ins_id = msti.ins_id");
+		$config['join'][]		= array("mst_employer me","me.id_employe = tdb.tdb_operator");
+		$config['where'][]		= "t.visit_status >= '$visit_status'";
+		$config['where'][]		= "t.visit_type = 'pembelian umum'";
+		$config['searchColumn']	= array("sd_name");
+		$config['aksi']			= array(
+									'stat'  	=> false,
+									// 'key'		=> 'mdc_id',
+									// 'pilih'	=> base_url().'kasir/lab/detail_transaksi/',
+									);
+		init_datatable($config);
+	}
+
+}

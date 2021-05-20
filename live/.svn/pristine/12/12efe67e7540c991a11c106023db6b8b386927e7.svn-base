@@ -1,0 +1,110 @@
+<?
+	$nama = array('sigit hanafi','hanief boerhanudin','khrisna yuniar','hanief han','agus dwi','yudha yoga','seicchi','dwi puspitasari','arista nur','handoko nurmalasari')
+?>
+<style type="text/css" media="screen">
+	.frm_search input{margin-top:-1px;float:right;margin-left:2px}
+	.frm_search .btn{float:right;margin-left:5px}
+	.frm_search .btn span{padding:2px 10px;}
+	.search_choice a{font-weight:bold}
+	.search_choice a.active{color:#fb9338}
+	.search_choice {float:right;margin-right:95px}
+	#advance{display:none}
+	#filter{border-bottom: 1px dashed #DDD;}
+	#body_search{margin-top:10px}
+	.tname{font-size:110%}
+	#dyntable tbody tr td{border-right:none}
+	#dyntable tbody tr td + td + td{border-right:1px solid #DDD}
+	#dyntable tr:nth-child(even){
+		background:#F7F7F7;
+	}
+	.dataTables_scrollHead{
+		margin-bottom: -22px;
+	}
+	.dataTables_info{
+		margin-top: 20px;
+	}
+	.table_tr thead th{
+		height: 28px;
+		vertical-align: middle;
+		font-size: 13px;
+	}
+	.table_tr tbody th{
+		height: 28px;
+		vertical-align: middle;
+		font-size: 13px;
+	}
+</style>
+<script type="text/javascript" charset="utf-8">
+	$(function(){
+		var d_uri = "<?=base_url()?>pelayanan_informasi/informasi_pasien/dt_all_pasien";
+		oTb = $('#dyntable').dataTable( {
+			"bProcessing": true,
+			"bServerSide": true,
+			"bLengthChange": false,		
+			"bFilter": true,
+			"sPaginationType": "full_numbers",
+			"aoColumns": [null,null,null,null,null,null,null],
+			"sAjaxSource": d_uri,
+			"fnServerData": function ( sSource, aoData, fnCallback ) {
+				var newArray = $.merge(aoData, [{ "name": "<?=$this->security->get_csrf_token_name()?>", "value": "<?=$this->security->get_csrf_hash()?>" }]);
+				$.ajax( {
+					"dataType": 'json',
+					"type": "POST", 
+					"url": sSource, 
+					"data": aoData, 
+					"success": fnCallback
+				} );
+			},
+			"fnDrawCallback": function() {
+				$("#dyntable tbody td:nth-child(1)").addClass('center');
+				$("#dyntable tbody td:nth-child(2)").addClass('left');
+				$("#dyntable tbody td:nth-child(3)").addClass('left');
+				$("#dyntable tbody td:nth-child(4)").addClass('left');
+				$("#dyntable tbody td:nth-child(5)").addClass('center');
+			}
+		});
+
+		$("#dyntable_filter").hide();
+		$(".chatsearch input").keyup(function(e){
+			$("#dyntable_filter input").val($(".chatsearch input").val()).trigger('keyup');
+		})
+	})
+</script>
+<div class="container-fluid">
+	<div class="row-fluid">
+		<div class="pageheader notab">
+		    <h1 class="pagetitle"><?=$title?></h1>
+		</div>
+	</div>
+	<div class="row-fluid">
+		<div class="span5" style="float:right;">
+			<div class="widgetbox" style="margin-top:20px;">
+				<?=form_open('',array('class'=>'frm_search'));?>
+					<div id="basic">
+						<div class="chatsearch" >
+                        	<input type="text" name="" placeholder="Search" style="width:91%;margin:auto;">
+                    	</div>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+	<br clear="all">
+	<div class="row-fluid">
+		<div class="widgetbox">
+			<div class="span12">
+				<table id="dyntable" class="table table-bordered table_tr">
+					<thead>
+						<th style="width:10%;">No. Rekam Medis</th>
+						<th style="width:15%;">Nama</th>
+						<th style="width:20%;">Alamat</th>
+						<th style="width:12%;">Tempat Lahir</th>
+						<th style="width:12%;">Tanggal Lahir</th>
+						<th style="width:12%;">Umur</th>
+						<th style="width:12%;">Tanggal Registrasi</th>
+					</thead>
+				</table>
+			</div>
+		</div>
+	</div>
+</div>

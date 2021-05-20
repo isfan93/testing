@@ -1,0 +1,113 @@
+<style type="text/css" media="screen">
+    .dataTables_scrollHead{
+        margin-bottom: -22px;
+    }
+    .dataTables_info{
+        margin-top: 20px;
+    }
+    .dataTables_filter{
+        display:none;
+    }
+</style>
+<div class="container-fluid">
+    <div class="row-fluid">
+        <div class="span12">
+            <div class="title">
+                <h3><?php echo $desc; ?>  
+                    <span class="tgl-sekarang"></span> 
+                </h3>
+            </div>
+            <div id="basic" style="float:right;width:300px">
+                <div class="chatsearch">
+                    <input type="text" name="" placeholder="Search" style="width:85%;margin:auto;">
+                </div>
+            </div>
+            <table class="table table-bordered def_table_y dataTable tb_scrol" align="center" id="patientList">
+                <thead>
+                    <tr role="row">
+                        <th style="width:20%">Tanggal Masuk</th>
+                        <th style="width:20%">No Kunjungan</th>
+                        <th style="width:20%">Nama Pasien</th>
+                        <th style="width:20%">Kelas</th>
+                        <th style="width:20%">No Kamar</th>                    
+                    </tr>
+                </thead>
+                <tbody></tbody>
+                <tfoot></tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+<div id="confirmation" class="modal hide fade">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h3>Konfirmasi</h3>
+    </div>
+    <div class="modal-body"></div>
+    <div class="modal-footer">
+        <a href="#" class="btn btn-primary confirm">Yes</a>
+        <a href="#" class="btn" data-dismiss="modal">No</a>
+    </div>
+</div>
+
+<script type="text/javascript" charset="utf-8">
+    var oTable, visitID;
+    $(function () {
+        oTable = $('#patientList').dataTable({
+            "sPaginationType": "bootstrap",
+            "sScrollY": "400px",
+            "bPaginate": false,
+            "aoColumns": [null, null, null, null, null],
+            "aoColumnDefs": [
+                {"bSortable": true, "aTargets": [0], "sWidth": "20%"},
+                {"bSortable": true, "aTargets": [1], "sWidth": "20%"},
+                {"bSortable": true, "aTargets": [2], "sWidth": "20%"},
+                {"bSortable": true, "aTargets": [3], "sWidth": "20%"},
+                {"bSortable": true, "aTargets": [4], "sWidth": "20%"}
+            ],
+            "sAjaxSource": "<?= base_url() ?>rawat_inap/pasien_ranap/",
+            "fnServerData": function (sSource, aoData, fnCallback) {
+                var newArray = $.merge(aoData, [{"name": "<?= $this->security->get_csrf_token_name() ?>", "value": "<?= $this->security->get_csrf_hash() ?>"}]);
+                $.ajax({
+                    "dataType": 'json',
+                    "type": "POST",
+                    "url": sSource,
+                    "data": aoData,
+                    "success": fnCallback
+                });
+            },
+            "fnDrawCallback": function () {
+                $("#patientList tbody td:nth-child(1)").addClass('center');
+                $("#patientList tbody td:nth-child(2)").addClass('center');
+                $("#patientList tbody td:nth-child(3)").addClass('center');
+                $("#patientList tbody td:nth-child(4)").addClass('center');
+                $("#patientList tbody td:nth-child(5)").addClass('center');
+            }
+        });
+
+        setInterval(function () {
+            oTable.fnReloadAjax("<?= base_url() ?>rawat_inap/pasien_ranap/");
+        }, 60000);
+
+        $("#patientList tbody tr").live('click', function () {
+            visitID = $(this).children().eq(1).text();
+            if (visitID.length !== 0) {
+                $("#patientList tbody tr.active").removeClass('active');
+                $(this).addClass('active');
+
+                var patientName = $(this).children().eq(2).text();
+                $('.modal-body').html('<p>Pilih pasien dengan nama : <b>' + patientName + '</b> ?</p>');
+                $('#confirmation').modal();
+            }
+        });
+
+        $('.confirm').click(function () {
+            location.href = '<?= base_url() ?>rawat_inap/pemeriksaan/' + visitID;
+        });
+
+        $(".chatsearch input").keyup(function (e) {
+            $(".dataTables_filter input").val($(".chatsearch input").val()).trigger('keyup');
+        });
+
+    });
+</script>

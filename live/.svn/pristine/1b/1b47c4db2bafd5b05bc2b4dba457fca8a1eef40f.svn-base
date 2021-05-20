@@ -1,0 +1,30 @@
+<div class='container-fluid'>
+	<div class='row-fluid'>
+		<div class='span12'>
+			<div class="widget-box">
+				<div class="widget-content nopadding">
+					<table class="table table-bordered table-striped table_tr tb_scrol" id="dyntable">
+					    <thead>
+					        <tr>
+					        	<th style="border-left:0px;">Kode / Nama Inventori</th>
+					            <th style="border-left:0px;">Jumlah Keluar</th>
+					        </tr>
+					    </thead>
+					    <tbody>
+					    	<?php foreach ($inv as $key => $value) : ?>
+						    	<tr>
+						    		<td style="border-left:0px;"><?php echo $value['im_name'];?></td>
+						    		<td style="border-left:0px;text-align:center;"><?php echo $value['qty'];?> <?php echo $value['mtype_name'];?></td>
+						    	</tr>
+					    	<?php endforeach; ?>	
+					    </tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="form-actions" style="margin-bottom:0px;">
+	<button type="button"  class="btn btn-primary cetak pull-right" value="">Cetak</button>
+</div>

@@ -1,0 +1,70 @@
+  <script>
+    $(function(){
+    	 $('.tabel-master').dataTable( {
+                "sPaginationType": "bootstrap",
+                // "sScrollY": "400px",
+                "bPaginate": true,
+                "bFilter": true,
+                "bRetrieve": true,
+                 "bDestroy": true,
+                "bSort": true,
+                "aoColumnDefs": [
+				      { "bSortable": false, "aTargets": [ 0 ],"sWidth":"3%"},
+					{ "bSortable": true, "aTargets": [ 1 ],"sWidth":"5%" },
+				      { "bSortable": true, "aTargets": [ 2 ],"sWidth":"40%" },
+					  { "bSortable": false, "aTargets": [ 3 ],"sWidth":"20%" },
+					  { "bSortable": false, "aTargets": [ 4 ],"sWidth":"10%" }
+				   ],
+                "oLanguage": {
+                  "sEmptyTable": "Data tidak tersedia"
+                }
+      });
+    	$(".dataTables_filter").hide();
+		  $('.dataTables_length').hide();
+    })
+ </script>
+ <table cellpadding="0" cellspacing="0" border="0" class="tabel-master table table-bordered def_table_y dataTable tb_scrol">
+ <!--style>
+	table#dyntable .center{
+		text-align:center;
+		font-size: 12px;
+	}
+	table#dyntable .right{
+		text-align:right;
+	}
+</style>
+<table class="table table-bordered table-striped table_tr tb_scrol" id="dyntable"-->
+	<thead>
+		<tr>
+			<th style="width:12% !important;">Tanggal Pemeriksaan</th>
+			<th style="width:10% !important;">No. Rekam Medis</th>
+			<th style="width:20% !important;">Nama Pasien</th>
+			<th style="width:20% !important;">Alamat Pasien</th>
+			<th style="width:12% !important;">Unit</th>
+			<th style="width:12% !important;">Dokter</th>		
+		</tr>
+	</thead>
+    <tbody id="list-data">
+    <?php $i=1; foreach ($datas->result() as $list):?>
+      <tr>
+        <td class="center"><?=$list->visit_in?></td> 
+        <td class="center"><?=$list->visit_rekmed?></td> 
+        <td><?=$list->sd_name?></td>               
+        <td class="center"><?=$list->sd_address?></td>
+        <td class="center"><?=$list->pl_name?></td> 
+		<td class="center"><?=$list->name_employer?></td>
+      </tr>
+    <?php endforeach?>               
+    </tbody>    
+  </table>
+
+<style type="text/css">
+    .tabel-master #list-data td{
+    	line-height: 10px;
+      padding: 6px;
+    }
+
+    #list-data .hiddens{
+      display: none;
+    }
+</style>

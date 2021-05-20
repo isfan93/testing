@@ -1,0 +1,33 @@
+<?php
+
+if (!defined('BASEPATH'))
+    exit('No direct script access allowed');
+
+class Rawat_inap_model extends MY_Controller {
+
+    private $cf;
+
+    function __construct() {
+        parent::__construct();
+    }
+
+    function currentPatient() {
+        $this->db
+                ->select('tv.visit_in,p.sd_rekmed,p.sd_name,c.class_name,r.room_id')
+                ->join('ptn_social_data p', 'p.sd_rekmed = tv.visit_rekmed')
+                ->join('hos_bed_occupation h', 'h.visit_id = tv.visit_id')
+                ->join('mst_bed b', 'b.bed_id = h.bed_id')
+                ->join('mst_room r', 'r.room_id = b.room_id')
+                ->join('mst_class c', 'c.class_id = r.class_id')
+                ->where('tv.visit_out', '0000-00-00 00:00:00')
+                ->where('tv.visit_status', '4');
+        $query = $this->db->get('trx_visit tv');
+
+        if ($query->num_rows() > 0) {
+            return $query->result();
+        } else {
+            return array();
+        }
+    }
+
+}

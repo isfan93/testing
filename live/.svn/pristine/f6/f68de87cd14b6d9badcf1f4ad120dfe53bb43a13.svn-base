@@ -1,0 +1,572 @@
+<link rel="stylesheet" href="<?=base_url()?>assets/css/jquery.gritter.css" />
+<link rel="stylesheet" href="<?= base_url() ?>assets/css/select2.css" />
+<script src="<?= base_url() ?>assets/js/select2.js"></script>
+<style>
+	.table_tr thead th{
+		height: 28px;
+		vertical-align: middle;
+		font-size: 13px;
+	}
+	#content{
+		/*min-height: 300px;*/
+	}
+
+	.alert{
+        background-color: transparent;
+        border: 0px;
+    }
+
+    #gritter-notice-wrapper{
+        right: 13%;
+        top: 100px;
+    }
+    .hiddens{
+        display: none;
+    }
+</style>
+<script type="text/javascript">
+	$(function(){
+        var statusRacikan = '0';
+        var statusResep = '0';
+		isvalid = $("#form").validate({
+			rules: {
+	            
+	        },
+	        submitHandler: function(form) {
+	            var url  = $("#form").attr('action');
+	            var data = jQuery(form).serialize();
+	            $.post(url,data, function(data){
+	                $(".alert").fadeIn().delay(1000).fadeOut(function(){
+	                    $("#save").trigger('click'); 
+	                    window.location.href = (document.referrer);
+	                });     
+	            }); 
+	            // return false;
+	        }
+	    });
+
+        $(".back").click(function(){
+        	window.history.back()
+        });
+
+        function reloadTable(){
+            var url_hasil="<?php echo base_url()?>apotek/resep_pasien/loaddata/<?=$recipe_id?>"
+            $("#listdata").load(url_hasil , function(result , success){
+                $("#listdata").html(result);
+                cekStatusAction(result,'resep');
+            });
+        }
+
+        function reloadTableRacikan()
+        {
+            var url_hasil="<?php echo base_url()?>apotek/resep_pasien/loaddataRacikan/<?=$mdc_id?>"
+            $("#listdataRacikan").load(url_hasil, function(result, success){
+                if (success == 'success'){
+                    $("#listdataRacikan").html(result);
+                    cekStatusAction(result,'racikan');
+                }
+            });
+        }
+
+        $('.btn_pencil').live("click",function(){
+            $(this).parent().parent().parent().find('.shows').hide();
+            $(this).parent().parent().parent().find('.hiddens').show();
+            var recipe_medicine = $(this).parent().parent().parent().find('.old_im_id').val();
+            $('#recipe_medicine_'+recipe_medicine).select2({
+                width : '100%',
+                placeholder: "Pilih Obat / Alkes",
+                minimumInputLength : 3,
+                data : [
+                    <?php foreach ($medicine->result() as $k => $v) : ?>
+                        <?php echo '{id:'.$v->im_id.',text:"'.$v->im_name.'"},';?>
+                    <?php endforeach;?>
+                ],
+                createSearchChoice:function(term, data) {
+                    if ( $(data).filter( function() {
+                       return this.text.localeCompare(term)===0;
+                    }).length===0) {
+                       return {id:term, text:term};
+                    }
+                },
+            });
+            var racikan_id = $(this).parent().parent().parent().find('.racikan_id').val();
+            $('#racikan_sediaan_'+racikan_id).select2({
+                width : '30%',
+                placeholder: "Sediaan",
+                data : [
+                    {id:'serbuk',text:'serbuk'},
+                    {id:'kapsul',text:'kapsul'},
+                    {id:'salep',text:'salep'},
+                ],
+            });
+            $('#racikan_tuslah_type_'+racikan_id).select2({
+                width : '69%',
+                placeholder: "Sediaan",
+                data : [
+                    <?php foreach ($racikan_fee->result() as $k => $v) : ?>
+                        <?php echo '{id:'.$v->id.',text:"'.$v->description.'"},';?>
+                    <?php endforeach;?>
+                ],
+            });
+            return false;
+        })
+
+        $('.submitEdit').live("click",function(){
+            t = this;
+            mdc_id          =  $(this).parent().parent().parent().find('.mdc_id').val();
+            im_id          =  $(this).parent().parent().parent().find('.old_im_id').val();
+            recipe_medicine =  $(this).parent().parent().parent().find('.recipe_medicine').select2('data').id;
+            recipe_medicine_name =  $(this).parent().parent().parent().find('.recipe_medicine').select2('data').text;
+            recipe_rule     =  $(this).parent().parent().parent().find('.recipe_rule').val();
+            recipe_qty      =  $(this).parent().parent().parent().find('.recipe_qty').val();
+            recipe_note     =  $(this).parent().parent().parent().find('.recipe_note').val();
+            crsf = $('.crsf').val();
+            csrf_name = $('.crsf').attr('name');
+            url = "<?=base_url()?>apotek/resep_pasien/update/"+mdc_id+"/"+im_id;
+            datapost = csrf_name+"="+crsf+"&ds[mdc_id]="+mdc_id+"&ds[recipe_medicine]="+recipe_medicine+"&ds[recipe_rule]="+recipe_rule+"&ds[recipe_qty]="+recipe_qty+"&ds[recipe_note]="+recipe_note+"&ds[recipe_medicine_name]="+recipe_medicine_name;
+            $(".black_loader").fadeIn(300).fadeOut(function(){
+                $.post(url,datapost).done(function(){
+                reloadTable();
+                $(t).parent().parent().parent().find('.shows').show();
+                $(t).parent().parent().parent().find('.hiddens').hide();
+
+            })
+          })
+
+          $(this).parent().parent().parent().find('.shows').show();
+          $(this).parent().parent().parent().find('.hiddens').hide();
+        });
+
+        $('.submitEditRacikan').live("click",function(){
+            t = this;
+            mdc_id          =  $(this).parent().parent().parent().find('.mdc_id').val();
+            racikan_id          =  $(this).parent().parent().parent().find('.racikan_id').val();
+            racikan_name    =  $(this).parent().parent().parent().find('.racikan_name').val();
+            racikan_rule     =  $(this).parent().parent().parent().find('.racikan_rule').val();
+            racikan_qty     =  $(this).parent().parent().parent().find('.racikan_qty').val();
+            racikan_sediaan     =  $(this).parent().parent().parent().find('.racikan_sediaan').select2('data').text;
+            racikan_tuslah_type     =  $(this).parent().parent().parent().find('.racikan_tuslah_type').select2('data').id;
+    
+            crsf = $('.crsf').val();
+            csrf_name = $('.crsf').attr('name');
+            url = "<?=base_url()?>apotek/resep_pasien/updateRacikan/"+mdc_id+"/"+racikan_id;
+            datapost = csrf_name+"="+crsf+"&ds[mdc_id]="+mdc_id+"&ds[racikan_name]="+racikan_name+"&ds[racikan_rule]="+racikan_rule+"&ds[racikan_tuslah_type]="+racikan_tuslah_type+"&ds[racikan_qty]="+racikan_qty+"&ds[racikan_sediaan]="+racikan_sediaan;
+            $(".black_loader").fadeIn(300).fadeOut(function(){
+                $.post(url,datapost).done(function(){
+                reloadTableRacikan();
+                $(t).parent().parent().parent().find('.shows').show();
+                $(t).parent().parent().parent().find('.hiddens').hide();
+
+            })
+          })
+
+          $(this).parent().parent().parent().find('.shows').show();
+          $(this).parent().parent().parent().find('.hiddens').hide();
+        });
+
+        $('.submitNew').live('click',function(){
+            t = this;
+            mdc_id          =  $(this).parent().parent().find('.mdc_id').val();
+            recipe_id       =  $(this).parent().parent().find('.recipe_id').val();
+            recipe_medicine =  $(this).parent().parent().find('.recipe_medicine').select2('data').id;
+            recipe_medicine_name =  $(this).parent().parent().find('.recipe_medicine').select2('data').text;
+            recipe_rule     =  $(this).parent().parent().find('.recipe_rule').val();
+            recipe_qty      =  $(this).parent().parent().find('.recipe_qty').val();
+            recipe_note     =  $(this).parent().parent().find('.recipe_note').val();
+            crsf = $('.crsf').val();
+            csrf_name = $('.crsf').attr('name');
+            url = "<?=base_url()?>apotek/resep_pasien/insert/";
+            datapost = csrf_name+"="+crsf+"&ds[mdc_id]="+mdc_id+"&ds[recipe_id]="+recipe_id+"&ds[recipe_medicine]="+recipe_medicine+"&ds[recipe_rule]="+recipe_rule+"&ds[recipe_qty]="+recipe_qty+"&ds[recipe_note]="+recipe_note+"&ds[recipe_medicine_name]="+recipe_medicine_name;
+            $(".black_loader").fadeIn(300).fadeOut(function(){
+                $.post(url,datapost).done(function(){
+                    reloadTable();
+                })
+            });
+        });
+
+        $('.submitNewRacikan').live('click',function(){
+            mdc_id          =  $(this).parent().parent().find('.mdc_id').val();
+            racikan_name    =  $(this).parent().parent().find('.racikan_name').val();
+            racikan_rule    =  $(this).parent().parent().find('.racikan_rule').val();
+            racikan_qty    =  $(this).parent().parent().find('.racikan_qty').val();
+            racikan_tuslah_type    =  $(this).parent().parent().find('.racikan_tuslah_type').select2('data').id;
+            racikan_sediaan    =  $(this).parent().parent().parent().find('.racikan_sediaan').select2('data').text;
+            crsf = $('.crsf').val();
+            csrf_name = $('.crsf').attr('name');
+            url = "<?=base_url()?>apotek/resep_pasien/insertRacikan/";
+            datapost = csrf_name+"="+crsf+"&ds[mdc_id]="+mdc_id+"&ds[racikan_name]="+racikan_name+"&ds[racikan_rule]="+racikan_rule+"&ds[racikan_tuslah_type]="+racikan_tuslah_type+"&ds[racikan_qty]="+racikan_qty+"&ds[racikan_sediaan]="+racikan_sediaan;
+            $(".black_loader").fadeIn(300).fadeOut(function(){
+                $.post(url,datapost).done(function(){
+                    reloadTableRacikan();
+                })
+            });
+        });
+
+        $(".kirim").click(function(){
+            var recipe_id = "<?=$recipe_id?>"; 
+            var url = "<?=base_url()?>apotek/resep_pasien/kirim_kasir/"+recipe_id;
+            data    = '';
+            $.post(url,data, function(data){
+                $(".alert").fadeIn().delay(1000).fadeOut(function(){
+                    window.location.href = (document.referrer);
+                });     
+            }); 
+        });
+
+        $('.btn_trash').live("click",function(){
+            t = this;
+            var r = confirm("Anda yakin akan menghapus data obat ini ?");
+            if (r == true) {
+                $(".black_loader").fadeIn(300).fadeOut(function(){
+                    $.get($(t).attr('href')).done(function(){
+                        reloadTable();
+                        reloadTableRacikan();
+                    });
+                });
+            } 
+            return false;
+        })
+
+        $('.btn_detail').live('click',function(){
+            t = this;
+            var racikann_id = $(this).attr('racikann_id');
+            $(this).parent().parent().parent().parent().find('.tr-hiddens-'+racikann_id).toggle();
+            return false;
+        });
+
+        $('.btn_add_obat_racikan').live('click',function(){
+            t = this;
+            var racikann_id = $(this).attr('racikann_id');
+            $(this).parent().parent().parent().parent().find('.tr-hiddens-add-'+racikann_id).toggle();
+            $('#racikan_medicine_'+racikann_id).select2({
+                width : '100%',
+                placeholder: "Pilih Obat / Alkes",
+                minimumInputLength : 3,
+                data : [
+                    <?php foreach ($medicine->result() as $k => $v) : ?>
+                        <?php echo '{id:'.$v->im_id.',text:"'.$v->im_name.'"},';?>
+                    <?php endforeach;?>
+                    ],
+                createSearchChoice:function(term, data) {
+                    if ( $(data).filter( function() {
+                       return this.text.localeCompare(term)===0;
+                    }).length===0) {
+                       return {id:term, text:term};
+                    }
+                },
+            });
+            $('#racikan_medicine_'+racikann_id).select2('open');
+            return false;
+        });
+
+        $('.submitAddDetailRacikan').live('click',function(){
+            var racikan_id = $(this).attr('racikan_id');
+            mdc_id              = $(this).parent().parent().parent().parent().find('.mdc_id').val();
+            racikan_id          = $(this).parent().parent().parent().parent().find('.racikan_id').val();
+            racikan_medicine      =  $(this).parent().parent().find('.racikan_medicine').select2('data').id;
+            racikan_medicine_name =  $(this).parent().parent().find('.racikan_medicine').select2('data').text;
+            racikan_medicine_qty    = $(this).parent().parent().parent().parent().find('.racikan_medicine_qty').val()
+            crsf = $('.crsf').val();
+            csrf_name = $('.crsf').attr('name');
+            url = "<?=base_url()?>apotek/resep_pasien/insertRacikanDetail/";
+            datapost = csrf_name+"="+crsf+"&ds[racikan_id]="+racikan_id+"&ds[racikan_medicine]="+racikan_medicine+"&ds[racikan_medicine_qty]="+racikan_medicine_qty+"&ds[racikan_medicine_name]="+racikan_medicine_name;
+            $(".black_loader").fadeIn(300).fadeOut(function(){
+                $.post(url,datapost).done(function(){
+                    reloadTableRacikan();
+                })
+            });
+        });
+
+        $('.btn_trash_racikan_detail').live("click",function(){
+            t = this;
+            var r = confirm("Anda yakin akan menghapus data obat ini ?");
+            if (r == true) {
+                $(".black_loader").fadeIn(300).fadeOut(function(){
+                    $.get($(t).attr('href')).done(function(){
+                        reloadTableRacikan();
+                    });
+                });
+            } 
+            return false;
+        })
+
+        function  cekStatusAction(result,act) {
+            if(act == 'racikan') {
+                statusRacikan = $("#listdataRacikan").find('#statusRacikan').val();
+            }
+            else{
+                statusResep = $("#listdata").find('#statusResep').val();
+            }
+
+            if( statusRacikan == '0' && statusResep == '0'){
+                $('.btn-action').attr('disabled','disabled');
+            }
+            else{
+                $('.btn-action').removeAttr('disabled');
+            }
+        }
+
+        reloadTable();
+        reloadTableRacikan();
+
+	});
+</script>
+
+<div id="gritter-notice-wrapper" class="alert hide" style="width:750px;position:fixed">
+    <div id="gritter-item-1" class="gritter-item-wrapper" style="margin:0 -17px 5px 0">
+        <div class="gritter-top"></div>
+        <div class="gritter-item">
+            <div class="gritter-close" style="display: none; width:50px "></div>
+            <img src="<?=base_url()?>assets/img/demo/envelope.png" class="gritter-image">
+            <div class="gritter-with-image" style="width:448px">
+                <span class="gritter-title" style="margin-left:36px">Message</span>
+                <p>Data Berhasil Disimpan   </p>
+            </div>
+            <div style="clear:both"></div>
+        </div>
+        <div class="gritter-bottom"></div>
+    </div>
+</div>
+<div class="black_loader">
+    <img src="<?=get_loader(11)?>">
+</div>
+<div class="container-fluid">
+    <div class="row-fluid">
+	    <div class="span12" style="background:#E5E5E5;padding-bottom:10px">
+            <div class="title" style="margin-bottom:-5px;margin-top:-10px;padding-top:0px;padding-bottom:0px;"><h3>Data Pasien</h3></div>
+            <div class="title" style="float:right;margin-bottom:-5px;margin-top:-10px;padding-top:0px;padding-bottom:0px;margin-right:20px;"><h3><?php echo pretty_date(date('Y-m-d'),false);?></h3></div>
+            <br clear="all">
+            <div class="row-fluid">
+                <div class="span2">
+                    <div style="padding:10px;float:left;width:100%;padding-bottom:0px;padding-left:20px;">
+                        <div style="float:left;">
+                            <?php if($data_pasien->visit_type == 'ranap') : ?>
+                            <b>No. Pemeriksaan</b>
+                            <?php else : ?>
+                            <b>No. Antrian</b>
+                            <?php endif;?>
+                        </div>
+                        <div style="float:left;margin-left:10px;">
+                            <b>: <?=$data_pasien->visit_id?></b>
+                        </div>
+                    </div>
+                </div>
+                <div class="span3">
+                    <div style="padding:10px;float:left;width:100%;padding-bottom:0px;padding-left:0px;">
+                        <div style="float:left;">
+                            <b>No.RM</b>
+                        </div>
+                        <div style="float:left;margin-left:10px;">
+                            <b>: <?=$data_pasien->sd_rekmed?> / <?=$data_pasien->sd_name?></b>
+                        </div>
+                    </div>
+                </div>
+                <div class="span2">
+                    <div style="padding:10px;float:left;width:100%;padding-bottom:0px;padding-left:0px;">
+                        <div style="float:left;">
+                            <b>JK</b>
+                        </div>
+                        <div style="float:left;margin-left:10px;">
+                            <?php if($data_pasien->sd_sex == 'L'){ $sex = 'Laki-laki';}else{ $sex = 'Perempuan';} ?>
+                            <b>: <?=$sex?> / <?=$data_pasien->sd_age?> Tahun</b>
+                        </div>
+                    </div>
+                </div>
+                <div class="span3">
+                    <div style="padding:10px;float:left;width:100%;padding-bottom:0px;padding-left:0px;">
+                        <div style="float:left;">
+                            <b>Gol. Darah</b>
+                        </div>
+                        <div style="float:left;margin-left:10px;">
+                            <b>:  <?=$data_pasien->sd_blood_tp?> / <?php echo $data_pasien->ptn_medical_blod_sy;?> mm/Hg / <?php echo $data_pasien->ptn_medical_blod_ds;?> mm/Hg</b>
+                        </div>
+                    </div>
+                </div>
+                <div class="span2">
+                    <div style="padding:10px;float:left;width:100%;padding-bottom:0px;padding-left:0px;padding-right: 0px;">
+                        <div style="float:left;">
+                            <b>
+                            Tinggi <?php echo $data_pasien->ptn_medical_height;?> cm/ Berat <?php echo $data_pasien->ptn_medical_weight;?> Kg
+                            </b>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    	<?php
+        $visit_id = $data_pasien->visit_type == 'ranap' ? $data_pasien->examination_id : $data_pasien->visit_id;
+    	$resep_id = $data_pasien->recipe_id;
+        ?>
+    </div>
+    
+    <div class="row-fluid">
+        <div class="span12">
+            <div class="title" style="padding-top:0px;padding-bottom:0px;"><h3>Obat & Alkes</h3></div>
+            <input type="hidden" class='crsf' name="<?php echo $this->security->get_csrf_token_name()?>" value="<?php echo $this->security->get_csrf_hash()?>" />
+			<table class="table table-bordered table-striped table_tr">
+				<thead>
+					<tr>
+						<th>No</th>
+						<th style="max-width:200px !important;">Obat</th>
+						<th>Aturan Pakai</th>
+                        <th>Catatan</th>
+                        <th>Jumlah</th>
+                        <th>Total</th>
+                        <?php
+                            echo ($status_bayar_resep == 1) ? '<th></th>' : '<th>Aksi</th>';
+                        ?>
+					</tr>
+				</thead>
+				<tbody id="listdata">
+					
+				</tbody>
+                <tfoot>
+                    <?php
+                    if( $status_bayar_resep == 0)
+                    {
+                        ?>                 
+                        <tr>
+                            <td colspan="7" style="font-weight:bold;text-align:center;">
+                                <button class="btn btn-warning btn-small btn_add">Tambah</button>
+                            </td>
+                        </tr>
+                        <?php
+                    }
+                    ?>
+                </tfoot>
+			</table>
+		</div>
+    </div>
+    <div class="row-fluid">
+        <div class="span12" style="margin-top:20px;">
+            <div class="title" style="padding-top:0px;padding-bottom:0px;"><h3>Racikan</h3></div>
+            <input type="hidden" class='crsf' name="<?php echo $this->security->get_csrf_token_name()?>" value="<?php echo $this->security->get_csrf_hash()?>" />
+            <table class="table table-bordered table-striped table_tr">
+                <thead>
+                    <tr>
+                        <!-- <th>Sediaan</th> -->
+                        <th>Nama Racikan</th>
+                        <th>Aturan Pakai</th>
+                        <th>Sediaan / Biaya Tusla</th>
+                        <!-- <th>Jumlah</th> -->
+                        <th>Total</th>
+                        <?php
+                            echo ($status_bayar_resep == 1) ? '<th></th>' : '<th>Aksi</th>';
+                        ?>
+                    </tr>
+                </thead>
+                <tbody id="listdataRacikan">
+                    
+                </tbody>
+                <tfoot>
+                    <?php
+                    if( $status_bayar_resep == 0)
+                    {
+                        ?>                 
+                        <tr>
+                            <td colspan="8" style="font-weight:bold;text-align:center;">
+                                <button class="btn btn-warning btn-small btn_add_racikan">Tambah Racikan</button>
+                            </td>
+                        </tr>
+                        <?php
+                    }
+                    ?>
+                </tfoot>
+            </table>
+            <?php 
+            if( $data_pasien->visit_status < 5 )
+            {
+                ?>
+                <?=form_open(base_url().'apotek/resep_pasien/simpan/'.$resep_id,array('class' => 'form-horizontal','id' => 'form')); ?>
+                <input type="hidden" name="ds[visit_id]" value="<?=$visit_id?>" />          
+                <div style="text-align:right;margin-top:20px">
+                    <button type="button" class="btn back">Kembali</button>
+                    <a target="_blank" class="btn cetak" href="<?=base_url()?>apotek/resep_pasien/cetak_resep/<?=$recipe_id?>">Cetak Resep</a>
+                    <?php
+                        echo ($status_bayar_resep == 1 || $data_pasien->visit_type == 'ranap') ? '<button class="btn btn-primary btn-action">Kurangi Stok</button>' : '<button type="button" class="btn kirim btn-info btn-action">Kirim ke Kasir</button>';
+                    ?>
+                </div>
+                <?=form_close()?>
+                <?php 
+            } 
+            ?>
+        </div>
+    </div>
+</div>
+
+<?php
+    $select = '<option>Pilih Obat/ alkes</option>';
+    foreach ($medicine->result() as $k => $v) 
+    {
+        $select .= "<option value='".$v->im_id."'>".$v->im_name."</option>";
+    }
+?>
+<script type="text/javascript">
+    $(function(){
+        var incIdMedicine = 0;
+        $('.btn_add').click(function(){
+            select  = "<?=$select?>";
+            mdc_id  = "<?=$mdc_id?>";
+            recipe_id = "<?=$recipe_id?>"; 
+            text = '';
+            text    += '<tr><td><input type="hidden" name="" class="mdc_id" value="'+mdc_id+'" /><input type="hidden" name="" class="recipe_id" value="'+recipe_id+'" /></td>';
+            text    += '<td  style="width:300px;"><input type="text" id="recipe_medicine_'+incIdMedicine+'" class="recipe_medicine" /></td>';
+            text    += '<td style="text-align:center;vertical-align:middle;"><input type="text" name="" class="recipe_rule" /></td>';
+            text    += '<td style="text-align:center;vertical-align:middle;"><input type="text" name="" class="recipe_note" /></td>';
+            text    += '<td style="text-align:center;vertical-align:middle;"><input type="text" name="" class="recipe_qty input-mini" /></td>';
+            text    += '<td></td>';
+            text    += '<td style="text-align:center;vertical-align:middle;"><input type="button" value="Simpan" class="submitNew radius2 btn btn-primary btn-small" /></td></tr>';
+            $("#listdata").append(text);
+            $('#recipe_medicine_'+incIdMedicine).select2({
+                width : '100%',
+                placeholder: "Pilih Obat / Alkes",
+                minimumInputLength : 3,
+                data : [
+                    <?php foreach ($medicine->result() as $k => $v) : ?>
+                        <?php echo '{id:'.$v->im_id.',text:"'.$v->im_name.'"},';?>
+                    <?php endforeach;?>
+                ],
+                createSearchChoice:function(term, data) {
+                    if ( $(data).filter( function() {
+                       return this.text.localeCompare(term)===0;
+                    }).length===0) {
+                       return {id:term, text:term};
+                    }
+                },
+            });
+            $('#recipe_medicine_'+incIdMedicine).select2('open');
+        });
+
+        $('.btn_add_racikan').click(function(){
+            mdc_id  = "<?=$mdc_id?>";
+            text = '';
+            text    += '<tr><td><input type="hidden" name="mdc_id" class="mdc_id" value="'+mdc_id+'" /><input type="text" name="racikan_name" class="racikan_name" value="" placeholder="Nama Racikan"/></td>';
+            // text    += '<td><input type="text" name="racikan_name" class="racikan_name" value="" placeholder="Nama Racikan"/></td>';
+            text    += '<td style="text-align:center;vertical-align:middle;"><input type="text" name="racikan_rule" class="racikan_rule input-small" placeholder="Aturan Pakai"/></td>';
+            text    += '<td style="text-align:center;vertical-align:middle;"><input type="hidden" id="racikan_sediaan" class="racikan_sediaan"><input id="racikan_tuslah_type" type="hidden" name="racikan_tuslah_type" class="racikan_tuslah_type" /><input type="hidden" name="racikan_qty" class="racikan_qty input-small" placeholder="Jumlah"/></td>';
+            // text    += '<td style="text-align:center;vertical-align:middle;"><input type="hidden" name="racikan_qty" class="racikan_qty input-small" placeholder="Jumlah"/></td>';
+            text    += '<td></td>';
+            text    += '<td style="text-align:center;vertical-align:middle;"><input type="button" value="Simpan" class="submitNewRacikan radius2 btn btn-primary btn-small" /></td>';
+            $("#listdataRacikan").append(text);
+            $('#racikan_sediaan').select2({
+                width : '30%',
+                placeholder: "Sediaan",
+                data : [
+                    {id:'serbuk',text:'serbuk'},
+                    {id:'kapsul',text:'kapsul'},
+                    {id:'salep',text:'salep'},
+                ],
+            });
+            $('#racikan_tuslah_type').select2({
+                width : '69%',
+                placeholder: "Tipe Tusla",
+                data : [
+                    <?php foreach ($racikan_fee->result() as $k => $v) : ?>
+                        <?php echo '{id:'.$v->id.',text:"'.$v->description.'"},';?>
+                    <?php endforeach;?>
+                ],
+            });
+        });
+
+    });
+</script>

@@ -1,0 +1,125 @@
+<head>
+	<title>SURAT KETERANGAN SEHAT</title>
+	<?php $this->load->view("include/script");?>
+	<link rel="stylesheet" href="<?=base_url()?>assets/css/print.css"/>
+	<style type="text/css">
+		table td{
+			padding: 5px;
+		}
+		table th{
+			padding: 5px;
+		}
+		.rincian{
+			border-top: 1px solid black;
+		}
+	</style>
+	<script type="text/javascript">
+		$(function(){
+			window.print();
+		});
+	</script>
+</head>
+<div class="container-fluid" style="margin-top:20px;">
+	<div class="row-fluid">
+		<div class="span12">
+			<div class="widget-box">
+				<div class="kop-surat" style="border-bottom:double black;" >
+					<div class="span5">
+						<img src="<?php echo base_url();?>assets/image-sistem/logo.png" style="">
+					</div>
+					<div class="span7">
+						<div class="text-kop-surat">
+							<!-- <h5>RUMAH SAKIT INTAN HUSADA</h5> -->
+							<p style="text-align:right;margin-top:10px;">
+								Jalan Mayor Suherman 72 Tarogong Garut Jawa Barat
+								<br>
+								Kode Pos : 44151  
+								<br>
+								Telp. (0262) 2247760, 243499
+								<br>
+								Fax (0262) 2247760
+							</p>
+						</div>
+					</div>
+					<br clear="all">
+				</div>
+				<br clear="all">
+				<div class="body-surat">
+					<div class="span12">
+						<div class="text-body-surat">
+							<h5 style="text-align:center;">
+								NOTA TANGGUNGAN PASIEN
+							</h5>
+							<table style="font-size:12px;margin-top:20px;">
+								<tr>
+									<td>Nama Pasien</td>
+									<td>: <?php echo $patient->sd_name;?></td>
+								</tr>
+								<tr>
+									<td>Tempat/Tanggal Lahir</td>
+									<td>: <?php echo $patient->sd_place_of_birth;?>, <?php echo pretty_date($patient->sd_date_of_birth,false);?></td>
+								</tr>
+								<tr>
+									<td>Jenis Kelamin</td>
+									<td>: <?php echo $patient->sd_sex;?></td>
+								</tr>
+								<tr>
+									<td>No. Rekam Medis</td>
+									<td>: <?php echo $patient->sd_rekmed;?></td>
+								</tr>
+							</table>
+							<h6>Rincian Pemeriksaan :</h6>
+							<table style="font-size:12px;margin-top:10px;width:98%;" class="rincian">
+								<tr>
+									<th style="text-align:left;">Pemeriksaan</th>
+									<th style="text-align:right;">Harga</th>
+									<th style="text-align:right;">Tanggungan</th>
+								</tr>
+								<?php
+								$no = 0;
+								$tanggungan = $total_amount = $total = $paramedic_fee = 0;
+								if( $lab_treathment->num_rows() >= 1 ){
+									foreach ($lab_treathment->result() as $key => $value) {
+										$tanggungan += ($value->ds_paramedic_price + $value->ds_price);
+										$total += ($value->ds_paramedic_price + $value->ds_price);
+										$paramedic_fee += ($value->ds_paramedic_price);
+										?>
+										<tr>
+											<td><?php echo $value->ds_name;?></td>
+											<td style="text-align:right;"><?php echo number_format($total, 2, ",", ".");?></td>
+											<td style="text-align:right;"><?php echo number_format($tanggungan, 2, ",", ".");?></td>
+										</tr>
+										<?php
+									}
+								}
+								?>
+								<tr style="border-top:1px solid black;">
+									<th colspan="2" style="text-align:right;">Total Tanggungan</th>
+									<th style="text-align:right;"><?php echo number_format($tanggungan, 2, ",", ".");?></th>
+								</tr>
+							</table>
+						</div>
+					</div>
+					<div class="span4 offset8" style="margin-top:20px;">
+						<div class="text-body-surat">
+							<p>
+								<?php echo pretty_date(date('Y-m-d'),false);?><br>
+								Rumah Sakit Intan Husada<br>
+								Petugas Kasir,
+							</p>
+							<p style="margin-top:80px;margin-bottom:20px;font-weight:bold;">
+								<?php
+								echo get_user('user_name');
+								?>
+							</p>
+						</div>	
+					</div>
+				</div>
+				<br clear="all">
+				<div class="footer-surat">
+					
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

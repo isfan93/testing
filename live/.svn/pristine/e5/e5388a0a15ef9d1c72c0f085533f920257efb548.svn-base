@@ -1,0 +1,353 @@
+<?php
+
+if (!defined('BASEPATH'))
+    exit('No direct script access allowed');
+
+class Rawat_inap_model extends MY_Controller {
+
+    function __construct() {
+        parent::__construct();
+    }
+
+    function currentPatient() {
+        $this->db
+                ->select('tv,visit_id,tv.visit_in,p.sd_rekmed,p.sd_name,c.class_name,r.room_id')
+                ->join('ptn_social_data p', 'p.sd_rekmed = tv.visit_rekmed')
+                ->join('hos_bed_occupation h', 'h.visit_id = tv.visit_id')
+                ->join('mst_bed b', 'b.bed_id = h.bed_id')
+                ->join('mst_room r', 'r.room_id = b.room_id')
+                ->join('mst_class c', 'c.class_id = r.class_id')
+                ->where('tv.visit_out', '0000-00-00 00:00:00');
+        $query = $this->db->get('trx_visit tv');
+
+        if ($query->num_rows() > 0) {
+            return $query->result();
+        } else {
+            return array();
+        }
+    }
+
+    function getVitalSign($visit_id) {
+        $this->db
+                ->like('mdc_id', $visit_id, 'after')
+                ->order_by('mdc_id', 'desc');
+        $query = $this->db->get('trx_medical_ptn_now');
+
+        if ($query->num_rows() > 0) {
+            return $query->row_array();
+        } else {
+            return array();
+        }
+    }
+
+    function getPatientData($visit_id) {
+        $this->db
+                ->select('tv.visit_id,p.sd_rekmed,p.sd_name,p.sd_address,p.sd_sex,p.sd_age,p.sd_blood_tp,p.sd_alergi,p.sd_riwayat_penyakit,tv.visit_in,c.class_name,r.room_id')
+                ->join('trx_visit tv', 'tv.visit_rekmed = p.sd_rekmed')
+                ->join('hos_bed_occupation h', 'h.visit_id = tv.visit_id')
+                ->join('mst_bed b', 'b.bed_id = h.bed_id')
+                ->join('mst_room r', 'r.room_id = b.room_id')
+                ->join('mst_class c', 'c.class_id = r.class_id')
+                ->where('tv.visit_id', $visit_id);
+        $query = $this->db->get('ptn_social_data p');
+
+        if ($query->num_rows() > 0) {
+            return $query->row_array();
+        } else {
+            return array();
+        }
+    }
+
+    function getPhysician() {
+        $this->db
+                ->select('m.id_employe,m.sd_name')
+                ->where('m.sd_employe_tp', 1);
+        $query = $this->db->get('mst_employer m');
+
+        if ($query->num_rows() > 0) {
+            return $query->result_array();
+        } else {
+            return array();
+        }
+    }
+
+    function getNurses() {
+        $this->db
+                ->select('m.id_employe,m.sd_name')
+                ->where('m.sd_employe_tp', 2)
+                ->where('m.sd_type_user', 24);
+        $query = $this->db->get('mst_employer m');
+
+        if ($query->num_rows() > 0) {
+            return $query->result_array();
+        } else {
+            return array();
+        }
+    }
+
+    /**
+     * @deprecated
+     */
+    function oldSaveExamination() {
+        $visit_id = $this->uri->segment(3);
+        $physician_id = $this->input->post('physician');
+        $nurse_id = $this->input->post('nurse');
+        $vital_sign = $this->input->post('vs');
+        $subjective = $this->input->post('subjective');
+        $objective = $this->input->post('objective');
+        $diag_id = $this->input->post('diag_id');
+        $treat_id = $this->input->post('treat_id');
+        $diag_note = $this->input->post('diag_note');
+        $med_id = $this->input->post('med_id');
+        $uses = $this->input->post('uses');
+        $day = $this->input->post('day');
+        $rule = $this->input->post('rule');
+        $med_note = $this->input->post('med_note');
+        $quantity = $this->input->post('quantity');
+
+        $last_exam_id = $this->db->like('examination_id', $visit_id, 'after')->order_by('examination_id', 'DESC')->get('hos_examination', 1, 0)->row();
+        $examination_id = count($last_exam_id) == 0 ? $visit_id . '001' : $examination_id + 1;
+
+        //arrange data for table hos_examination insertion
+        $exam_data = compact('visit_id', 'examination_id', 'physician_id', 'nurse_id');
+
+        //arrange data for table hos_vital_sign insertion
+        $vs_data = array(
+            'examination_id' => $examination_id,
+            'blood_type' => $vital_sign['blood_type'],
+            'weight' => $vital_sign['weight'],
+            'height' => $vital_sign['height'],
+            'systole' => $vital_sign['blood_pressure']['systole'],
+            'diastole' => $vital_sign['blood_pressure']['diastole'],
+            'consciousness' => $vital_sign['consciousness'],
+            'pulse' => $vital_sign['pulse'],
+            'respiration_rate' => $vital_sign['respiration_rate'],
+            'temperature' => $vital_sign['temperature'],
+        );
+
+        //arrange data for table hos_sub_obj insertion
+        $subobj_data = array(
+            'examination_id' => $examination_id,
+            'subjective' => $subjective,
+            'objective' => $objective,
+        );
+
+        //arrange data for hos_diagnose and hos_medication insertion
+        $diag_data = $treat_data = $prescription_details_data = $bill_data = $rcp_detail_data = array();
+        for ($i = 0; $i < count($diag_id); $i++) {
+            $diag_data[$i]['examination_id'] = $examination_id;
+            $diag_data[$i]['diagnose_id'] = $diag_id[$i];
+            $diag_data[$i]['case_type'] = $this->input->post("case_{$i}") ? $this->input->post("case_{$i}") : '';
+            $diag_data[$i]['note'] = $diag_note[$i];
+        }
+
+        for ($i = 0; $i < count($treat_id); $i++) {
+            $treat_data[$i]['examination_id'] = $examination_id;
+            $treat_data[$i]['diagnose_id'] = $diag_id[$i];
+            $treat_data[$i]['treatment_id'] = $treat_id[$i];
+        }
+
+        //insert to table trx_recipe and trx_recipe_details
+        $prescription_id = Modules::run('rawat_jalan/poli_umum/gen_id');
+        $prescription_data = array(
+            'prescription_id' => $prescription_id,
+            'examination_id' => $examination_id,
+            'status' => 0
+        );
+
+        for ($i = 0; $i < count($med_id); $i++) {
+            $prescription_details_data[$i]['prescription_id'] = $prescription_id;
+            $prescription_details_data[$i]['medicine_id'] = $med_id[$i];
+            $prescription_details_data[$i]['uses'] = $uses[$i];
+            $prescription_details_data[$i]['day'] = $day[$i];
+            $prescription_details_data[$i]['note'] = $med_note[$i];
+            $prescription_details_data[$i]['rule'] = $rule[$i];
+            $prescription_details_data[$i]['quantity'] = $quantity[$i];
+        }
+
+        $this->db->trans_start();
+        $success1 = $this->repo_model->insert('hos_examination', $exam_data);
+        $success2 = $this->repo_model->insert('hos_vital_sign', $vs_data);
+        $success3 = $this->repo_model->insert('hos_sub_obj', $subobj_data);
+        $success4 = $this->repo_model->insert('hos_prescription', $prescription_data);
+        $success5 = $this->db->insert_batch('hos_diagnose', $diag_data);
+        $success6 = $this->db->insert_batch('hos_treatment', $treat_data);
+        $success7 = $this->db->insert_batch('hos_prescription_details', $prescription_details_data);
+        $this->db->trans_complete();
+
+        $success = $success1 && $success2 && $success3 && $success4 && $success5 && $success6 && $success7;
+        return $success;
+    }
+
+    function saveExamination() {
+        $visit_id = $this->uri->segment(3);
+        $physician_id = $this->input->post('physician');
+        $nurse_id = $this->input->post('nurse');
+        $vital_sign = $this->input->post('vs');
+        $subjective = $this->input->post('subjective');
+        $objective = $this->input->post('objective');
+        $diag_id = $this->input->post('diag_id');
+        $treat_id = $this->input->post('treat_id');
+        $diag_note = $this->input->post('diag_note');
+        $med_id = $this->input->post('med_id');
+        $uses = $this->input->post('uses');
+        $day = $this->input->post('day');
+        $rule = $this->input->post('rule');
+        $med_note = $this->input->post('med_note');
+        $quantity = $this->input->post('quantity');
+
+        $last_exam_id = $this->db->like('examination_id', $visit_id, 'after')->order_by('examination_id', 'DESC')->get('hos_examination', 1, 0)->row();
+        $examination_id = count($last_exam_id) == 0 ? $visit_id . '001' : $last_exam_id->examination_id + 1;
+
+        //arrange data for table hos_examination insertion
+        $exam_data = compact('visit_id', 'examination_id', 'physician_id', 'nurse_id');
+
+        //arrange data for table trx_medical_ptn_now insertion
+        $ptn_now_data = array();
+        if ($vital_sign['weight'] != NULL || $vital_sign['height'] != NULL || $vital_sign['blood_pressure']['systole'] != NULL || $vital_sign['blood_pressure']['diastole'] != NULL || $vital_sign['consciousness'] != NULL || $vital_sign['pulse'] != NULL || $vital_sign['respiration_rate'] != NULL || $vital_sign['temperature'] != NULL) {
+            $ptn_now_data = array(
+                'mdc_id' => $examination_id,
+                'ptn_medical_weight' => $vital_sign['weight'],
+                'ptn_medical_height' => $vital_sign['height'],
+                'ptn_medical_blod_sy' => $vital_sign['blood_pressure']['systole'],
+                'ptn_medical_blod_ds' => $vital_sign['blood_pressure']['diastole'],
+                'ptn_medical_kesadaran' => $vital_sign['consciousness'],
+                'ptn_medical_nadi' => $vital_sign['pulse'],
+                'ptn_medical_heartrate' => $vital_sign['respiration_rate'],
+                'ptn_medical_temperatur' => $vital_sign['temperature'],
+            );
+        }
+
+        //arrange data for table trx_medical_anamnesa insertion
+        $anam_data = array();
+        if ($subjective != NULL) {
+            $anam_data = array(
+                'mdc_id' => $examination_id,
+                'ma_desc' => $subjective,
+            );
+        }
+
+        //arrange data for table trx_medical_objective insertion
+        $obj_data = array();
+        if ($objective != NULL) {
+            $obj_data = array(
+                'mdc_id' => $examination_id,
+                'mo_desc' => $objective,
+            );
+        }
+
+        //arrange data for table trx_diagnosa_treathment & trx_diagnosa_treathment_detail insertion
+        $diag_data = $diag_details_data = array();
+        if ($diag_id[0] != NULL) {
+            $diagnose_id = Modules::run('rawat_jalan/poli_umum/gen_id_diagnosa');
+            $diagnose_id_exp = explode('-', $diagnose_id);
+            $diag_id_code = $diagnose_id_exp[0];
+            $diag_id_num = (int) $diagnose_id_exp[1];
+            $k = 0;
+            for ($i = 0; $i < count($diag_id); $i++) {
+                if ($diag_id[$i] != NULL) {
+                    $diag_data[$i]['mdc_id'] = $examination_id;
+                    $diag_data[$i]['dat_id'] = $diag_id_code . '-' . $diag_id_num;
+                    $diag_data[$i]['dat_diag'] = $diag_id[$i];
+                    $diag_data[$i]['dat_case'] = $this->input->post("case_{$i}") ? $this->input->post("case_{$i}") : '';
+                    $diag_data[$i]['dat_note'] = $diag_note[$i];
+
+                    for ($j = 0; $j < count($treat_id[$i + 1]); $j++) {
+                        $diag_details_data[$k]['mdc_id'] = $examination_id;
+                        $diag_details_data[$k]['dat_id'] = $diag_data[$i]['dat_id'];
+                        $diag_details_data[$k]['dat_treat'] = $treat_id[$i + 1][$j];
+                        $k++;
+                    }
+                    $diag_id_num++;
+                }
+            }
+        }
+
+        //arrange data for table trx_recipe and trx_recipe_details
+        $recipe_data = $prescription_data = $prescription_details_data = array();
+        if ($med_id[0] != NULL && $uses[0] != NULL && $quantity[0] != NULL) {
+            $prescription_id = Modules::run('rawat_jalan/poli_umum/gen_id');
+            $recipe_data = array(
+                'mdc_id' => $examination_id,
+                'recipe_id' => $prescription_id,
+                'recipe_paramedic_price' => 0
+            );
+
+            $prescription_data = array(
+                'prescription_id' => $prescription_id,
+                'status' => 0
+            );
+
+            for ($i = 0; $i < count($med_id); $i++) {
+                if ($med_id[$i] != NULL && $uses[$i] != NULL && $quantity[$i] != NULL) {
+                    $prescription_details_data[$i]['mdc_id'] = $examination_id;
+                    $prescription_details_data[$i]['recipe_id'] = $prescription_id;
+                    $prescription_details_data[$i]['recipe_medicine'] = $med_id[$i];
+                    $prescription_details_data[$i]['recipe_rule'] = $uses[$i] . ' X ' . $day[$i] . ' ' . $rule[$i];
+                    $prescription_details_data[$i]['recipe_note'] = $med_note[$i];
+                    $prescription_details_data[$i]['recipe_qty'] = $quantity[$i];
+                }
+            }
+        }
+
+        $this->db->trans_start();
+        $this->db->insert('hos_examination', $exam_data);
+        if (!empty($ptn_now_data)) {
+            $this->db->insert('trx_medical_ptn_now', $ptn_now_data);
+        }
+        if (!empty($anam_data)) {
+            $this->db->insert('trx_medical_anamnesa', $anam_data);
+        }
+        if (!empty($obj_data)) {
+            $this->db->insert('trx_medical_objective', $obj_data);
+        }
+        if (!empty($recipe_data)) {
+            $this->db->insert('trx_recipe', $recipe_data);
+        }
+        if (!empty($prescription_data)) {
+            $this->db->insert('hos_prescription', $prescription_data);
+        }
+        if (!empty($diag_data)) {
+            $this->db->insert_batch('trx_diagnosa_treathment', $diag_data);
+        }
+        if (!empty($diag_details_data)) {
+            $this->db->insert_batch('trx_diagnosa_treathment_detail', $diag_details_data);
+        }
+        if (!empty($prescription_details_data)) {
+            $this->db->insert_batch('trx_recipe_detail', $prescription_details_data);
+        }
+        Modules::run('rawat_jalan/poli_umum/calculate_bill', $examination_id);
+        $this->db->trans_complete();
+
+        $success = TRUE;
+        if ($this->db->trans_status() === FALSE) {
+            $success = FALSE;
+        }
+        return $success;
+    }
+
+    function checkOut($visit_id) {
+        $this->db->where(array('visit_id' => $visit_id, 'is_occupied' => 1));
+        $this->db->update('hos_bed_occupation', array('is_occupied' => 0));
+    }
+
+    function hospitalDischarge($visit_id) {
+        //cek apakah sudah checkout
+        $query = $this->db->get_where('hos_bed_occupation', array('is_occupied' => 1));
+        $checkout_status = $query->num_rows() == 0 ? TRUE : FALSE;
+
+        //cek apakah semua pembayaran telah dilunasi
+        $query = $this->db->get_where('trx_visit_bill', array('visit_id' => $visit_id, 'payment_status' => 0));
+        $payment_status = $query->num_rows() == 0 ? TRUE : FALSE;
+        $return = $checkout_status && $payment_status;
+        if ($return) {
+            $visit_data['visit_status'] = 5;
+            $visit_data['visit_out'] = date('Y-m-d H:i:s');
+            $this->db->where('visit_id', $visit_id);
+            $this->db->update('trx_visit', $visit_data);
+        }
+
+        return $return;
+    }
+
+}

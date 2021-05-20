@@ -1,0 +1,16 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class Rawat_inap extends MY_Controller {
+
+	function __construct() {
+		parent::__construct();
+	}
+
+	public function index(){
+		$data['main_view']	= 'rawat_inap/index';
+		$data['title']		= 'Title ';
+		$data['desc']		= 'Description. ';
+		$data['cf']			=  $this->cf;
+		$this->load->view('template',$data);
+	}
+}

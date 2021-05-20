@@ -1,0 +1,39 @@
+<title><?=(isset($title)) ? $title : '';?> | SIMRS IH</title>
+<!--script css-->
+    <link rel="stylesheet" href="<?=base_url()?>assets/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="<?=base_url()?>assets/css/bootstrap-responsive.min.css" />
+    <link rel="stylesheet" href="<?=base_url()?>assets/css/fullcalendar.css" />   
+    <link rel="stylesheet" href="<?=base_url()?>assets/css/unicorn.main.css" />
+    <link rel="stylesheet" href="<?=base_url()?>assets/css/unicorn.grey.css" class="skin-color" />
+    <link rel="stylesheet" href="<?=base_url()?>assets/css/flexbox.css"/>
+	<!-- <link rel="stylesheet" href="<?=base_url()?>assets/css/style.default.css"/> -->
+
+<!--script js-->
+    <script src="<?=base_url()?>assets/js/excanvas.min.js"></script>
+    <script src="<?=base_url()?>assets/js/jquery.min.js"></script>
+    <script src="<?=base_url()?>assets/js/jquery.ui.custom.js"></script>
+    <script src="<?=base_url()?>assets/js/bootstrap.min.js"></script>
+     <script src="<?=base_url()?>assets/js/jquery.peity.min.js"></script>
+    <script src="<?=base_url()?>assets/js/fullcalendar.min.js"></script>
+    <script src="<?=base_url()?>assets/js/unicorn.js"></script>
+    <script src="<?=base_url()?>assets/js/jquery.dataTables.min.js"></script>
+	<script src="<?=base_url()?>assets/js/jquerydatatablebootstrap.js"></script>
+	<script src="<?=base_url()?>assets/js/plugins/hicharts.js"></script>
+    <script src="<?=base_url()?>assets/js/flexbox.js"></script>
+	<script src="<?=base_url()?>assets/js/valid.js"></script>
+
+	<!--[if lte IE 8]><script language="javascript" type="text/javascript" src="js/plugins/excanvas.min.js"></script><![endif]-->
+<!--[if IE 9]>
+    <link rel="stylesheet" media="screen" href="css/style.ie9.css"/>
+<![endif]-->
+<!--[if IE 8]>
+    <link rel="stylesheet" media="screen" href="css/style.ie8.css"/>
+<![endif]-->
+<!--[if lt IE 9]>
+	<script src="http://css3-mediaqueries-js.googlecode.com/svn/trunk/css3-mediaqueries.js"></script>
+<![endif]-->
+
+<script type="text/javascript" charset="utf-8">
+	var BASE = "<?=base_url()?>";
+	var CUR  = "<?=cur_url()?>";
+</script>

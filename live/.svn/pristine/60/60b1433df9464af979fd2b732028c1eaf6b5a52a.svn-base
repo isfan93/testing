@@ -1,0 +1,46 @@
+<div class="container-fluid">
+    <div class="row-fluid">
+        <div class="span5" >
+            <div class="title"><h3>Rekap Penjualan</h3></div>
+        </div>
+        <div class="span5" style="float:right;">
+
+        </div>
+    </div>
+</div>
+<div class="container-fluid">
+    <div class="row-fluid">
+        <div class="span12">
+            <div id="tabs" class="ui-tabs ui-widget ui-widget-content ui-corner-all;" style="background-color:white;padding-left:0px;margin-left:0px;" >
+                <ul class="ui-tabs-nav ui-helper-reset ui-helper-clearfix ui-widget-header ui-corner-all" style="padding-left:0px;margin-left:0px;">
+                    <li class="ui-state-default ui-corner-top"><a href="#" surl='<?=base_url("pelaporan/apotek/rekap_harian/")?>' id="tab_rekmed">Harian</a></li>
+                    <li class="ui-state-default ui-corner-top"><a href="#" surl='<?=base_url("pelaporan/apotek/rekap_bulanan/")?>' id="tab_kajian">Bulanan</a></li>
+                    <li class="ui-state-default ui-corner-top"><a href="#" surl='<?=base_url("pelaporan/apotek/rekap_tahunan/")?>' id="tab_objective">Tahunan</a></li>
+                </ul>
+                <div id="page">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="black_loader">
+    <img src="<?=get_loader(11)?>">
+</div>
+
+<script type="text/javascript" charset="utf-8">
+    $(function(){
+        $("#tabs ul li a").click(function(){
+            var surl =  $(this).attr("surl");
+            $(".black_loader").fadeIn(300).delay(100).fadeOut(function(){
+                $("#page").load(surl);
+            });
+            $("#tabs ul li").each(function(){
+                $(this).removeClass('ui-state-active ui-tabs-selected');
+            })
+            $(this).parent().addClass("ui-state-active ui-tabs-selected");
+            return false;
+        })
+        $("#tabs ul li:eq(0) a").trigger('click');
+    });
+</script>

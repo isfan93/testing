@@ -1,0 +1,287 @@
+<link rel="stylesheet" href="<?=base_url()?>assets/css/jquery.gritter.css" />
+<style>
+	td.curr{
+		text-align:right;
+	}
+
+	.table#table_transaksi tr.active{
+		background-color: #F8D995 !important;
+	}
+
+	.table#table_transaksi tr:even{
+		background-color: #f60;
+	}
+
+	.table-striped tbody tr:nth-child(2n+1) td, .table-striped tbody tr:nth-child(2n+1) th{
+		background-color: transparent;
+	}
+	.table_tr thead th{
+		height: 28px;
+		vertical-align: middle;
+		font-size: 13px;
+	}
+	.table_tr tbody th{
+		height: 28px;
+		vertical-align: middle;
+		font-size: 13px;
+	}
+	#content{
+		min-height: 200px !important;
+	}
+	.money{
+		text-align: right;
+	}
+	.title{
+		padding: 0px !important;
+	}
+    .alert{
+        background-color: transparent;
+        border: 0px;
+    }
+
+    #gritter-notice-wrapper{
+        right: 13%;
+        top: 100px;
+    }
+</style>
+<script type="text/javascript">
+	$(function(){
+		$('#patient_pay').blur(function(){
+			bayar = parseFloat($(this).val());
+			$(this).val(formatCurrency(bayar));
+			must_pay = parseFloat($('#total_pay').val().replace(',',''));
+			$('#kurang_bayar').val(formatCurrency(must_pay-bayar));
+			if( (must_pay-bayar) <= 0 ){
+				$('#simpan').removeAttr('disabled');
+			}
+		})
+	})
+	function formatCurrency(num) {
+		num = num.toString().replace(/\$|\,/g, '');
+		if (isNaN(num)) num = "0";
+		sign = (num == (num = Math.abs(num)));
+		num = Math.floor(num * 100 + 0.50000000001);
+		cents = num % 100;
+		num = Math.floor(num / 100).toString();
+		if (cents < 10) cents = "0" + cents;
+		for (var i = 0; i < Math.floor((num.length - (1 + i)) / 3); i++)
+		num = num.substring(0, num.length - (4 * i + 3)) + ',' + num.substring(num.length - (4 * i + 3));
+		return (((sign) ? '' : '-') + num + '.' + cents);
+	}
+</script>
+<script>
+	$(function(){
+	
+	$('table#table_transaksi tr').click(function(){
+		var rm = $(this).find('.rm').val();
+		$(".table#table_transaksi tr.active").removeClass('active');
+		var url = '<?=cur_url()?>../../get_detail_transaksi/'+rm;
+		//$.get(url);
+		$(".detail_transaksi").load(url);
+		$(this).addClass('active');
+	})
+
+	$("table").click(function(){
+	})
+
+	$('.rm').parent().hide();
+	})
+
+</script>
+<div id="gritter-notice-wrapper" class="alert hide" style="width:750px;position:fixed;right:13%;top:100px">
+	<div id="gritter-item-1" class="gritter-item-wrapper" style="margin:0 -17px 5px 0">
+		<div class="gritter-top"></div>
+		<div class="gritter-item">
+			<div class="gritter-close" style="display: none; width:50px "></div>
+			<img src="<?=base_url()?>assets/img/demo/envelope.png" class="gritter-image">
+			<div class="gritter-with-image" style="width:448px">
+				<span class="gritter-title" style="margin-left:36px">Message</span>
+				<p>Data Berhasil Disimpan 	</p>
+			</div>
+			<div style="clear:both"></div>
+		</div>
+		<div class="gritter-bottom"></div>
+	</div>
+</div>
+<div class="container-fluid">
+    <div class="row-fluid">
+        <div class="span12" style="background:#E5E5E5;">
+         	<div class="title" style="margin-bottom:-5px;margin-top:-10px;padding-top:0px;padding-bottom:0px;"><h3>Data Pasien</h3></div>
+            <div class="title" style="float:right;margin-bottom:-5px;margin-top:-10px;padding-top:0px;padding-bottom:0px;margin-right:20px;"><h3><?php echo pretty_date(date('Y-m-d'),false);?></h3></div>
+            <br clear="all">
+            <div class="row-fluid">
+	            <div class="span2">
+	                <div style="padding:10px;float:left;width:100%;padding-bottom:0px;padding-left:20px;">
+	                    <div style="float:left;">
+	                        <b>Nomor RM</b>
+	                    </div>
+	                    <?php $sd_rekmed = $patient->sd_rekmed;?>
+	                    <div style="float:left;margin-left:10px;">
+	                        <b>: <?=$patient->sd_rekmed?></b>
+	                    </div>
+	                </div>
+	            </div>
+	            <div class="span2">
+	                <div style="padding:10px;float:left;width:100%;">
+	                    <div style="float:left;">
+	                        <b>Nama</b>
+	                    </div>
+	                    <div style="float:left;margin-left:10px;">
+	                        <b>: <?=$patient->sd_name?></b>
+	                    </div>
+	                </div>
+	            </div>
+	            <div class="span2">
+	                <div style="padding:10px;float:left;width:100%;">
+	                    <div style="float:left;">
+	                        <b>JK</b>
+	                    </div>
+	                    <div style="float:left;margin-left:10px;">
+	                        <b>: <?=$patient->sd_sex == 'l'? 'laki-laki' : 'perempuan' ?></b>
+	                    </div>
+	                </div>
+	            </div>
+
+	            <div class="span2">
+	                <div style="padding:10px;float:left;width:100%;">
+	                    <div style="float:left;">
+	                        <b>Umur</b>
+	                    </div>
+	                    <div style="float:left;margin-left:10px;">
+	                        <b>: <?=$patient->sd_age?> Tahun</b>
+	                    </div>
+	                </div>
+	            </div>
+	            <div class="span2">
+	                <div style="padding:10px;float:left;width:100%;">
+	                    <div style="float:left;">
+	                        <b>Gol. Darah</b>
+	                    </div>
+	                    <div style="float:left;margin-left:10px;">
+	                        <b>: <?=$patient->sd_blood_tp?></b>
+	                    </div>
+	                </div>
+	            </div>
+            </div>
+        </div>
+    </div>
+    <?php
+    $total_sum = $tertanggung = $total_amount = $total = 0;
+    ?>
+    <div class='row-fluid'>
+    	<div style="margin-top:20px;">
+	    	<div class="span7">
+				<?=form_open(base_url().'kasir/rawat_jalan/bayar',array('class' => 'form-horizontal','id' => 'form')); ?>
+				<input type="hidden" name="ds[mdc_id]" value="<?=$medical_id?>">
+				<input type="hidden" name="ds[sd_rekmed]" value="<?=$sd_rekmed?>">
+				<table id='table_transaksi' class="table table-bordered table-striped table_tr dyntable">
+					<thead>
+						<tr>
+							<th>Nomor</th>
+							<th>Penggunaan</th>
+							<th>Total</th>
+							<th>Tanggungan</th>
+						</tr>
+					</thead>
+					<tbody>
+					<?php
+					$no = 0;
+					foreach ($mst_bill as $key => $value) {
+						if( !empty($trx_bill[$value->bill_id]) ){
+							?>
+							<tr>
+								<td colspan="4" style="font-weight:bold;">
+									<?php echo $value->bill_name;?>
+								</td>
+							</tr>
+							<?php
+							foreach ($trx_bill[$value->bill_id] as $k => $v) {
+								$no++;
+								$total_amount 	+= $v->amount;
+								$tertanggung 	+= $v->tanggungan;
+								?>
+								<tr>
+									<td class="" style="text-align:center;"><?php echo $no;?></td>
+									<td><?php echo $v->desc;?></td>
+									<td style="text-align:right;"><?php echo number_format($v->amount, 2, ",", "."); ?></td>
+									<td style="text-align:right;"><?php echo number_format($v->tanggungan, 2, ",", "."); ?></td>
+								</tr>
+								<?php
+							}
+						}
+					}
+					?>
+					</tbody>
+				</table>
+			</div>
+			<div class="span5" style="margin-left:1%">
+				Catatan Rekening<br/>
+				<textarea rows=5 style="width:95%;" name="ds[note]"><?php echo (isset($trx_medical))? $trx_medical->note : '';?></textarea>
+				Pembayaran
+				<select style="max-width:120px" name="ds[ins_id]" value="<?php echo $trx_medical->ins_id;?>">
+					<?php
+					foreach($insurance as $ins):?>//
+						<option value="<?=$ins->ins_id?>"><?=$ins->ins_name?></option>
+						<?php
+					endforeach;
+					?>
+				</select>
+				<br/>
+				Nomor &nbsp;
+				<input type="text" name="ds[ins_no]" value="<?php echo $trx_medical->ins_no;?>" class="input-medium"  placeholder="Nomor Asuransi" autocomplete="off"/>
+				<br/>
+				<style>
+					#harga td{
+						vertical-align: middle;padding:4px;
+					}
+					#harga input{
+						margin:0px;
+						width:150px;
+					}
+				</style>
+				<table id="harga">
+					<tr>
+						<td>Total</td><td><input type="text" class="money" name="ds[total_amount]" readonly="readonly" value="<?=number_format($total_amount,2)?>" /></td>
+						<td>Tertanggung</td><td><input type="text" class="money" id="total_pay" name="ds[total_pay]" val="<?=$tertanggung?>" readonly="readonly" value="<?=number_format($tertanggung,2)?>" /></td>
+					</tr>
+					<tr>
+						<td>Dokter</td><td><input type="text" class="money" name="ds[doctor_fee]" readonly="readonly" value="<?=number_format($dokter_fee,2)?>" /></td>
+						<?php
+						$patient_pay = '';
+						if( $trx_medical->patient_pay > 0 ){
+							$patient_pay = 'disabled';
+						}
+						?>
+						<td>Membayar</td><td><input type="text" class="money" name="ds[patient_pay]" id="patient_pay" <?php echo $patient_pay;?> value="<?=number_format($trx_medical->patient_pay,2)?>" autocomplete="off" /></td>
+					</tr>
+					<tr>
+						<td></td><td></td>
+						<td>Kekurangan</td><td><input type="text" class="money" id="kurang_bayar" readonly="readonly" value="<?=number_format($total_sum,2)?>" /></td>
+					</tr>
+				</table>
+				<div style="text-align:right;margin-top:20px">
+					<!-- <button id="cetak" type="button" class="btn btn-info" >Cetak Resep</button> -->
+					<a id="simpan" target="_blank" href="<?php echo cur_url(-2)?>cetak_nota/<?=$medical_id?>" class="btn btn-primary" disabled >Bayar</a>
+					<!-- <button id="simpan" type="button" class="btn btn-primary" disabled="disabled" >Bayar</button> -->
+				</div>
+				<?=form_close()?>
+			</div>
+		</div>
+    </div>
+</div>
+
+<script type="text/javascript">
+	$(function(){
+		$("#simpan").click(function(){
+		    var url  = $("#form").attr('action');
+		    var data = $("#form").serialize();
+		    $.post(url,data, function(data){
+	            $(".alert").fadeIn().delay(500).fadeOut(function(){
+	                // $("#save").trigger('click'); 
+		    		window.location = "<?=base_url()?>kasir/rawat_jalan";
+	            });     
+	        }); 
+		    // return false;
+		});
+	})
+</script>

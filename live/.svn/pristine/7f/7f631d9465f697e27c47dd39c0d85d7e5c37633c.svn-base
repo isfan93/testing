@@ -1,0 +1,121 @@
+<?php
+    $i = 0;
+    $total  = 0;
+    foreach ($racikan->result() as $key => $value) {
+        $i++;
+        ?>
+            <tr>
+                <td style="text-align:center;width:5%;">
+                    <div class="hidden">
+                        <input type="hidden" name="" class="mdc_id" value="<?=$value->mdc_id?>" >
+                        <input type="hidden" name="" class="racikan_id" value="<?=$value->racikan_id?>" >
+                    </div>
+                    <?=$i?>
+                </td>
+                <td style="width:30%;">
+                    <div class='shows'><?=$value->racikan_name?></div>
+                    <div class="hiddens"><input type="text" name="" class="racikan_name" value="<?=$value->racikan_name?>"></div>
+                </td>
+                <td style="text-align:center;width:15%;">
+                    <div class='shows'><?=$value->racikan_rule?></div>
+                    <div class="hiddens"><input type="text" name="" class="racikan_rule" value="<?=$value->racikan_rule?>"></div>
+                </td>
+                <td style="text-align:left;width:15%;">
+                    <div class='shows'><?=$value->racikan_note?></div>
+                    <div class="hiddens"><input type="text" name="" class="racikan_note" value="<?=$value->racikan_note?>"></div>
+                </td>
+                 <td style="text-align:right;width:15%;">
+                    <div class='shows'><?php echo number_format(($value->racikan_total), 2, ",", ".");?></div>
+                    <div class="hiddens"><?=$value->racikan_total?></div>
+                    <?php $total += ($value->racikan_total); ?>
+                </td>
+                <?php
+                if( $status_bayar_resep == 0)
+                {
+                    ?>
+    				<td style="text-align:center;">
+                        <div class='shows'>
+                            <a class="buttons btn_add_obat_racikan" style="background-position: -55px -230px;" href="<?=base_url()?>apotek/resep_pasien/insertRacikanDetail/<?=$value->mdc_id?>/<?=$value->racikan_id?>" racikann_id="<?=$value->racikan_id?>"></a>
+                            <a class="buttons btn_detail" style="background-position: -55px -483px;" href="" racikann_id="<?=$value->racikan_id?>"></a>
+                            <a class="buttons btn_pencil" style="" href="<?=base_url()?>apotek/resep_pasien/edit_list_racikan/<?=$value->mdc_id?>/<?=$value->racikan_id?>"></a>
+                            <a class="buttons btn_trash" style="margin-left:10px;" href="<?=base_url()?>apotek/resep_pasien/delete_list_racikan/<?=$value->mdc_id?>/<?=$value->racikan_id?>"></a>
+                        </div>
+                        <div class="hiddens">
+                            <input type="button" value="Simpan" class="submitEditRacikan radius2 btn btn-primary btn-small"> 
+                        </div> 
+                    </td>
+                    <?php 
+                }else{
+                    ?>
+                    <td></td>
+                    <?php
+                }
+                ?>
+			</tr>
+            <tr class="hiddens tr-hiddens-add-<?=$value->racikan_id?>">
+                <td></td>
+                <td colspan="5">
+                    <table class="table" style="background:transparent;border:0px;">
+                        <tr>
+                            <td style="background:transparent;border:0px;width:100px;">
+                                <input type="hidden" name="" class="mdc_id" placeholder="Aturan pakai" value="<?=(isset($value->mdc_id)) ? $value->mdc_id : 'halo'?>">
+                                <input type="hidden" name="" class="racikan_id" placeholder="Aturan pakai" value="<?=(isset($value->racikan_id)) ? $value->racikan_id : ''?>">
+                                <select name="" class="racikan_medicine">
+                                    <?php
+                                    foreach ($medicine->result() as $k => $v) {
+                                        $selected = '';
+                                        if( $value->recipe_medicine == $v->im_id)
+                                            $selected = 'selected';
+                                        else
+                                            $selected = '';
+                                        ?>
+                                        <option value="<?=$v->im_id?>" <?=$selected?> ><?=$v->im_name?></option>
+                                        <?php
+                                    }
+                                    ?>
+                                </select>
+                            </td>
+                            <td style="background:transparent;border:0px;">
+                                <input type="text" name="" class="racikan_medicine_qty input input-small" placeholder="Jumlah" value="<?=(isset($detail->racikan_medicine_qty)) ? $detail->racikan_medicine_qty : ''?>">
+                                <input type="button" value="Tambah Obat" style="margin-top: -10px;" class="submitAddDetailRacikan radius2 btn btn-primary btn-small"> 
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr class="tr-hiddens-<?=$value->racikan_id?>">
+                <td></td>
+                <td colspan="5">
+                    <table class="table" style="background:transparent;border:0px;">
+                        <?php if(isset($detail[$value->racikan_id])) : ?>
+                            <?php foreach ($detail[$value->racikan_id] as $k => $v) : ?>
+                                <tr>
+                                    <td style="background:transparent;border:0px;width:20px;">
+                                        <?php if( $status_bayar_resep == 0) : ?>
+                                            <a class="buttons btn_trash_racikan_detail" style="background-position: -53px -15px;" href="<?=base_url()?>apotek/resep_pasien/deleteListRacikanDetail/<?=$value->racikan_id?>/<?=$v->racikan_medicine?>/<?=$v->racikan_medicine_qty?>"></a>
+                                        <?php else : ?>
+                                            <?=($k+1)?>
+                                        <?php endif;?>
+                                    </td>
+                                    <td style="background:transparent;border:0px;width:100px;">
+                                        <?php echo $v->im_name;?>
+                                    </td>
+                                    <td style="background:transparent;border:0px;">
+                                        <?php echo $v->racikan_medicine_qty;?> <?php echo $v->mtype_name;?>
+                                    </td>
+                                    <td style="background:transparent;border:0px;width:20px;">
+                                    </td>
+                                </tr>
+                            <?php endforeach;?>
+                        <?php endif;?>
+                    </table>
+                </td>
+            </tr>
+		<?php
+	}
+?>
+<tr id="total">
+    <td colspan="4" style="font-weight:bold;text-align:right;">Total</td>
+    <td style="font-weight:bold;text-align:right;"><?=number_format(($total), 2, ",", ".")?></td>
+    <td></td>
+</tr>

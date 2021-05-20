@@ -1,0 +1,43 @@
+<style type="text/css" media="screen">
+    .search_input input{margin-top:-1px;float:right;margin-left:2px}
+    .search_input .btn{float:right;margin-left:5px}
+    .search_input .btn span{padding:2px 10px;}
+    .search_choice a{font-weight:bold}
+    .search_choice a.active{color:#fb9338}
+    .search_choice {float:right;margin-right:95px}
+    .dataTables_filter{display:none}
+    #advance{display:none}
+    #filter{border-bottom: 1px dashed #DDD;}
+    #body_search{margin-top:10px}
+    .tname{font-size:110%}
+    .dynamic-table .btn {margin-left:2px;margin-right:2px}
+    .dynamic-table{width:98%;margin-left:auto;margin-right:auto;margin-bottom:10px;}
+    .dynamic-table tbody tr td{border-right:none}
+    .dynamic-table .btn {margin-left:2px;margin-right:2px}
+    .dynamic-table tr:nth-child(even){
+        background:#F7F7F7;
+    }
+    .dataTables_scrollHead{
+        margin-bottom: -22px;
+    }
+    .dataTables_info{
+        margin-bottom: 20px;
+    }
+    .table_tr thead th{
+        height: 28px;
+        vertical-align: middle;
+        font-size: 13px;
+    }
+    .table_tr tbody th{
+        height: 28px;
+        vertical-align: middle;
+        font-size: 13px;
+    }
+    table.dynamic-table .center{
+        text-align:center;
+        font-size: 12px;
+    }
+    table.dynamic-table .right{
+        text-align:right;
+    }
+</style>

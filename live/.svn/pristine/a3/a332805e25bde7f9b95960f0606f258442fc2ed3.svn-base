@@ -1,0 +1,153 @@
+<?php
+
+if (!defined('BASEPATH'))
+    exit('No direct script access allowed');
+
+class Rawat_inap extends MY_Controller {
+
+    function __construct() {
+        parent::__construct();
+        $this->load->model('rawat_inap_model', 'rim');
+        $this->load->model('rawat_jalan/poli_model', 'pm');
+    }
+
+    function index() {
+        $data['main_view'] = 'index';
+        $data['title'] = 'Rawat Inap';
+        $data['cf'] = $this->cf;
+        $data['is_fullpage'] = true;
+        $data['current'] = '';
+        $data['desc'] = 'Daftar Pasien Rawat Inap ';
+        $this->load->view('template', $data);
+    }
+
+    function pasien_ranap() {
+        $config['sTable'] = "trx_service ts";
+        $config['aColumns'] = array("service_in", "service_id", "sd_name", "class_name", "room_id");
+        $config['aColumns_format'] = array("ts.service_in", "ts.service_id", "p.sd_name", "c.class_name", "r.room_id");
+        $config['php_format'] = array("datetime", "", "", "", "");
+        $config['join'][] = array('trx_visit tv', 'tv.visit_id = SUBSTR(ts.service_id,4,8)');
+        $config['join'][] = array('ptn_social_data p', 'p.sd_rekmed = tv.visit_rekmed');
+        $config['join'][] = array('hos_bed_occupation h', 'h.service_id = ts.service_id');
+        $config['join'][] = array('mst_bed b', 'b.bed_id = h.bed_id');
+        $config['join'][] = array('mst_room r', 'r.room_id = b.room_id');
+        $config['join'][] = array('mst_class c', 'c.class_id = r.class_id');
+        $config['where'][] = "ts.service_status != 5";
+        $config['key'] = "ts.service_id";
+        $config['searchColumn'] = array("sd_name", "class_name", "room_id");
+        $config['aksi'] = array('stat' => false);
+        init_datatable($config);
+    }
+
+    function pemeriksaan($service_id) {
+        $data['patient_data'] = $this->rim->getPatientData($service_id);
+        $data['title'] = 'Rawat Inap';
+        $data['is_fullpage'] = TRUE;
+        $data['main_view'] = 'pemeriksaan';
+        $this->load->view('template', $data);
+    }
+
+    function visite_dokter($service_id) {
+        $vital_sign = $this->rim->getVitalSign($service_id);
+        $data['pic']['service_in'] = $this->rim->getServiceDetails($service_id)->service_in;
+        $data['pic']['physicians'] = $this->rim->getPhysician();
+        $data['pic']['nurses'] = $this->rim->getNurses();
+        $patient_data = $this->rim->getPatientData($service_id);
+        $data['vital_sign'] = $vital_sign;
+        $data['vital_sign']['blood_type'] = $patient_data['sd_blood_tp'];
+        $data['patient_data'] = $patient_data;
+        $this->load->view('visite_dokter', $data);
+    }
+
+    function simpan_visite_dokter() {
+        $result = $this->rim->savePhysicianVisit();
+        $success = $result ? 'success' : 'failed';
+        echo json_encode(array('success' => $success));
+    }
+
+    function checkout($service_id){
+        //mengecek apakah pasien masih memiliki tanggungan pembayaran
+        $is_paid = $this->rim->is_paid($service_id);
+        if($is_paid){
+            $this->rim->checkOut($service_id);
+            $this->rim->hospitalDischarge($service_id);
+            $success = 'success';
+        }else{
+            $success = 'failed';
+        }
+        echo json_encode(compact('success'));
+    }
+
+    function riwayat_pemeriksaan($service_id){
+        $data['history'] = $this->rim->examinationHistory($service_id);
+        $this->load->view('examination_history',$data);
+    }
+
+    function detail_pemeriksaan($examination_id){
+        $exam_type = $this->rim->getExaminationType($examination_id);
+        if($exam_type == 'visite'){
+            $data['examination_details'] = $this->rim->physicianVisitDetails($examination_id);
+            $this->load->view('physician_visit_details',$data);
+        }elseif($exam_type == 'regular'){
+            $data['examination_details'] = $this->rim->nursingDetails($examination_id);
+            $this->load->view('nursing_details',$data);
+        }
+    }
+
+    function daftar_obat($service_id){
+        $data['returned_medicine_history'] = $this->rim->returned_medicine_history($service_id);
+        $data['list_of_medicine'] = $this->rim->list_of_medicine($service_id);
+        $this->load->view('retur_obat',$data);
+    }
+
+    function get_treatment($class_id = null){
+        $data = $this->rim->get_treatment($class_id);
+        echo json_encode($data);
+    }
+
+    function retur_obat(){
+        $success = $this->rim->returned_medicine();
+        $success = $success ? 'success' : 'failed';
+        echo json_encode(array('success' => $success));
+    }
+
+    function pendaftaran_lab_rad($service_reference,$service_type){
+        $result =  $this->rim->labRadRegistration($service_reference,$service_type);
+        echo json_encode(array('success' => $result['success'],'message' => $result['message']));
+    }
+
+    function perencanaan_keperawatan($service_id){
+        $data['data']['service_in'] = $this->rim->getServiceDetails($service_id)->service_in;
+        $data['data']['nurses'] = $this->rim->getNurses();
+        $data['treatment']['patient_data'] = $this->rim->getPatientData($service_id);
+        $this->load->view('nursing_plan',$data);
+    }
+
+    function get_nursing_diagnosis(){
+        $data = $this->rim->getNursingDiagnosis();
+        foreach ($data as $d) {
+            $data['results'][] = array(
+                'id'    => "$d->diagnosis_id",
+                'name'  => "$d->diagnosis_name",
+            );
+        }
+        echo json_encode($data);
+    }
+
+    function get_nursing_nic($nurse_diagnosis){
+        $data = $this->rim->getNursingNIC($nurse_diagnosis);
+        echo json_encode($data);
+    }
+
+    function simpan_perencanaan_keperawatan(){
+        $success = $this->rim->saveNursingPlan();
+        echo json_encode(array('success' => $success));
+    }
+
+    function room_options(){
+        $this->load->model('pendaftaran/pendaftaran_model');
+        $data['classes'] = $this->pendaftaran_model->getClasses();
+        $data['patient'] = $this->repo_model->get('ptn_social_data', array('sd_rekmed' => $this->input->post('patient_medrec')));
+        $this->load->view('room_options',$data);
+    }
+}

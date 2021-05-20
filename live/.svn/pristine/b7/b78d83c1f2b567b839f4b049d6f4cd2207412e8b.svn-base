@@ -1,0 +1,140 @@
+<div class="widget-box" style="border:0px !important;">
+	<style>
+		table#dyntable .center{
+			text-align:center;
+			font-size: 12px;
+		}
+		table#dyntable .right{
+			text-align:right;
+		}
+	</style>
+	<table class="table table-bordered table_tr" id="">
+	    <tbody>
+	        <tr>
+	        	<td style="font-weight:bold;background-color:#d9edf7;" colspan="3">Pendapatan</td>
+	        </tr>
+	        <tr>
+	        	<td style="font-weight:bold;background-color:#d9edf7;" colspan="3">Pendapatan Dari Kegiatan Usaha</td>
+	        </tr>
+	        <tr>
+	        	<td style="text-indent:50px;" colspan="1">Pendapatan Rawat Jalan & IGD</td>
+	        	<td style="text-indent:50px;" class="money" colspan="">800.000.000.00</td>
+	        	<td style="text-indent:50px;" colspan=""></td>
+	        </tr>
+	        <tr>
+	        	<td style="text-indent:50px;" colspan="1">Pendapatan Rawat Inap</td>
+	        	<td style="text-indent:50px;" class="money" colspan="">280.000.000.00</td>
+	        	<td style="text-indent:50px;" colspan=""></td>
+	        </tr>
+	        <tr>
+	        	<td style="text-indent:50px;" colspan="1">Pendapatan Penunjang Medis</td>
+	        	<td style="text-indent:50px;" class="money" colspan="">220.000.000.00</td>
+	        	<td style="text-indent:50px;" colspan=""></td>
+	        </tr>
+	        <tr>
+	        	<td style="font-weight:bold;background-color:#d9edf7;" colspan="3">Peghasilan Lain</td>
+	        </tr>
+	        <tr>
+	        	<td style="text-indent:50px;" colspan="1">Bunga Doposito</td>
+	        	<td style="text-indent:50px;" class="money" colspan="">100.000.000.00</td>
+	        	<td style="text-indent:50px;" colspan=""></td>
+	        </tr>
+
+	        <tr>
+	        	<td style="font-weight:bold;background-color:#d9edf7;" colspan="">Total Pendapatan</td>
+	        	<td style="text-indent:50px;background-color:#d9edf7;" colspan=""></td>
+	        	<td style="font-weight:bold;background-color:#d9edf7;" class="money" colspan="">1.400.000.000.00</td>
+	        </tr>
+
+		    <tr>
+	        	<td style="font-weight:bold;background-color:#000;" colspan="3"></td>
+	        </tr>
+
+	        <tr>
+	        	<td style="font-weight:bold;background-color:#d9edf7;" colspan="3">Beban</td>
+	        </tr>
+	        <tr>
+	        	<td style="font-weight:bold;background-color:#d9edf7;" colspan="3">Beban Kegiatan Usaha</td>
+	        </tr>
+	         <tr>
+	        	<td style="text-indent:50px;" colspan="1">Beban Rawat Jalan & IGD</td>
+	        	<td style="text-indent:50px;" class="money" colspan="">230.000.000.00</td>
+	        	<td style="text-indent:50px;" colspan=""></td>
+	        </tr>
+	        <tr>
+	        	<td style="text-indent:50px;" colspan="1">Beban Rawat Inap</td>
+	        	<td style="text-indent:50px;" class="money" colspan="">70.000.000.00</td>
+	        	<td style="text-indent:50px;" colspan=""></td>
+	        </tr>
+	        <tr>
+	        	<td style="text-indent:50px;" colspan="1">Beban Penunjang Medis</td>
+	        	<td style="text-indent:50px;" class="money" colspan="">100.000.000.00</td>
+	        	<td style="text-indent:50px;" colspan=""></td>
+	        </tr>
+	        <tr>
+	        	<td style="font-weight:bold;background-color:#d9edf7;" colspan="3">Beban Umum & Administrasi</td>
+	        </tr>
+	         <tr>
+	        	<td style="text-indent:50px;" colspan="1">Gaji Direksi & Karyawan</td>
+	        	<td style="text-indent:50px;" class="money" colspan="">480.000.000.00</td>
+	        	<td style="text-indent:50px;" colspan=""></td>
+	        </tr>
+	        <tr>
+	        	<td style="text-indent:50px;" colspan="1">Beban Kepersonaliaan</td>
+	        	<td style="text-indent:50px;" class="money" colspan="">20.000.000.00</td>
+	        	<td style="text-indent:50px;" colspan=""></td>
+	        </tr>
+	        <tr>
+	        	<td style="text-indent:50px;" colspan="1">Beban Penyusutan</td>
+	        	<td style="text-indent:50px;" class="money" colspan="">40.000.000.00</td>
+	        	<td style="text-indent:50px;" colspan=""></td>
+	        </tr>
+	        <tr>
+	        	<td style="text-indent:50px;" colspan="1">Beban Pelayanan</td>
+	        	<td style="text-indent:50px;" class="money" colspan="">60.000.000.00</td>
+	        	<td style="text-indent:50px;" colspan=""></td>
+	        </tr>
+	        <tr>
+	        	<td style="text-indent:50px;" colspan="1">Beban Administrasi & Umum Lainnya</td>
+	        	<td style="text-indent:50px;" class="money" colspan="">20.000.000.00</td>
+	        	<td style="text-indent:50px;" colspan=""></td>
+	        </tr>
+	        <tr>
+	        	<td style="font-weight:bold;background-color:#d9edf7;" colspan="3">Beban Lain - Lain</td>
+	        </tr>
+	        <tr>
+	        	<td style="text-indent:50px;" colspan="1">Beban Bunga Pinjaman</td>
+	        	<td style="text-indent:50px;" class="money" colspan="">20.000.000.00</td>
+	        	<td style="text-indent:50px;" colspan=""></td>
+	        </tr>
+	        <tr>
+	        	<td style="text-indent:50px;" colspan="1">Lain - Lain</td>
+	        	<td style="text-indent:50px;" class="money" colspan="">60.000.000.00</td>
+	        	<td style="text-indent:50px;" colspan=""></td>
+	        </tr>
+
+	        <tr>
+	        	<td style="font-weight:bold;background-color:#d9edf7;" colspan="">Total Beban</td>
+	        	<td style="text-indent:50px;background-color:#d9edf7;" colspan=""></td>
+	        	<td style="font-weight:bold;background-color:#d9edf7;" class="money" colspan="">1.100.000.000.00</td>
+	        </tr>
+
+	        <tr>
+	        	<td style="font-weight:bold;background-color:#000;" colspan="3"></td>
+	        </tr>
+    		<tr>
+	        	<td style="font-weight:bold;background-color:#d9edf7;" colspan="2">Sisa Hasil Usaha Sebelum PPH</td>
+	        	<td style="font-weight:bold;background-color:#d9edf7;" class="money" colspan="">300.000.000.00</td>
+	        </tr>
+		    <tr>
+	        	<td style="font-weight:bold;background-color:#d9edf7;" colspan="2">PPH25</td>
+	        	<td style="font-weight:bold;background-color:#d9edf7;" class="money" colspan="">20.000.000.00</td>
+	        </tr>
+		    <tr>
+	        	<td style="font-weight:bold;background-color:#d9edf7;" colspan="2">Sisa Hasil Usaha Bersih</td>
+	        	<td style="font-weight:bold;background-color:#d9edf7;" class="money" colspan="">- 280.000.000.00</td>
+	        </tr>
+	    	</tbody>
+	    </table>
+	</table>
+</div>

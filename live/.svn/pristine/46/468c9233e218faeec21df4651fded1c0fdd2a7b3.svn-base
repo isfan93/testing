@@ -1,0 +1,68 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class Pembelian_langsung extends MY_Controller {
+	function __construct() {
+		parent::__construct();
+		$this->cf = array(
+				'modul_id'	=> 5
+			);
+	}
+
+	public function index(){
+		$data['main_view']	= 'pembelian_langsung/add_pembelian_langsung';
+		$data['title']		= 'Pembelian Langsung';
+		$data['cf']			=  $this->cf;
+		$this->load->view('template',$data);
+	}
+
+	public function data_pembelian_langsung()
+	{
+		$data['main_view']	= 'pembelian_langsung/index';
+		$data['title']		= 'Resep Pasien';
+
+		$this->db->select('t.mdc_id,t.mdc_in,t.mdc_status,tpn.ptn_medical_weight,tpn.ptn_medical_height,tpn.ptn_medical_blod_sy,tpn.ptn_medical_blod_ds,p.sd_rekmed,p.sd_name,p.sd_sex,mp.pl_name,p.sd_age,p.sd_blood_tp,p.sd_address,tr.recipe_id');
+		$this->db->join('trx_medical_ptn_now tpn','tpn.mdc_id = t.mdc_id');
+		$this->db->join('ptn_social_data p','p.sd_rekmed = t.sd_rekmed');
+		$this->db->join('mst_poly mp','mp.pl_id = t.pl_id');
+		$this->db->join('trx_recipe tr','tr.mdc_id = t.mdc_id');
+		$this->db->where(array('recipe_status'=>'1','mdc_status'=>'3'));
+		$data['resep_pasien'] 	= $this->db->get('trx_medical t');
+		
+		$data['cf']			=  $this->cf;
+		$this->load->view('template',$data);
+	}
+
+	public function simpan_pembelian_langsung()
+	{
+		$detail = $this->input->post();
+		foreach($detail['rows'] as $r){
+			$dt = explode('|',$r);
+			$dt = array(
+				'ipo_id'			=> $data['ipo_id'],
+				'ipod_item'			=> $dt[0],
+				'ipod_qty'			=> $dt[1]
+			);
+			$this->db->insert('inv_purchase_order_detail', $dt);
+		}
+	}
+
+	// function select($medical_id){
+	// 	$data['main_view']	= 'apotek/pembelian_langsung/detail_pembelian';
+	// 	$data['title']		= 'Pembelian Langsung';
+	// 	$data['cf']			=  $this->cf;
+	// 	$this->load->view('template',$data);
+	// }
+
+	// function create(){
+	// 	$rm = "1";
+	// 	$data = $this->input->post('ds');
+	// 	// $this->db->insert('', $data);
+	// 	$this->session->set_flashdata('message',array('success','Data berhasil di buat'));
+	// 	echo cur_url(-1)."cetak/$rm";
+	// }
+
+	// function cetak($rm){
+	// 	$data['main_view']	= 'apotek/cetak';
+	// 	$this->load->view('template_print',$data);
+	// }
+}

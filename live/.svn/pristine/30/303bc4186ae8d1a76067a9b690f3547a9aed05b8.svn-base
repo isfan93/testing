@@ -1,0 +1,54 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class Keuangan extends MY_Controller {
+	function __construct() {
+		parent::__construct();
+		$this->load->model('keuangan_model');
+	}
+
+	function index(){
+		$data['main_view']	= 'keuangan/index';
+		$data['title']		= 'Rekap Harian';
+		$data['cf']			=  $this->cf;
+		$data['current']	= '';
+		$data['desc']		= 'Description. ';
+		$this->load->view('template',$data);
+	}
+	
+	function loaddata(){		
+		$data['datas'] = $this->keuangan_model->get_list();
+		$this->load->view('keuangan/data',$data);
+	}
+	
+	function show_report(){
+		$filter = $this->input->post('tgl');
+		//$tgl1=$filter[0];
+		//print_r($tgl1);
+		$data['datas'] = $this->keuangan_model->get_report($filter);
+		$this->load->view('keuangan/data',$data);
+	}
+
+	function hasil_usaha()
+	{
+		$data['main_view']	= 'keuangan/hasil_usaha';
+		$data['title']		= 'Laporan Hasil Usaha Tahun';
+		$data['cf']			=  $this->cf;
+		$data['current']	= '';
+		$data['desc']		= 'Description. ';
+		$this->load->view('template',$data);
+	}
+
+	function get_hasil_usaha($tahun)
+	{
+		$data['title']		= 'Laporan Hasil Usaha Tahun';
+		$data['cf']			=  $this->cf;
+		$data['current']	= '';
+		$data['desc']		= 'Description. ';
+		$this->load->view('keuangan/cetak_hasil_usaha',$data);
+	}
+	
+	function rekap_pendapatan(){
+	
+	}
+
+}

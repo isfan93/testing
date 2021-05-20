@@ -1,0 +1,154 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class Retur extends MY_Controller {
+	function __construct() {
+		parent::__construct();
+		// ipo status 0 -> default ; 1 sudah diproses
+	}
+
+	// index
+	public function index(){
+		$data['main_view']	= 'retur/index';
+		$data['title']		= 'Retur';
+		$data['cf']			= $this->cf;
+		$this->load->view('template',$data);
+	}
+
+	function get_retur(){
+
+		$config['sTable']		= "inv_retur i";
+		$config['aColumns']		= array("ir_id","ir_date_req","msup_name","ir_operator","ir_note");
+		$config['aColumns_format']	= array("i.ir_id,i.ir_date_req,ms.msup_name,i.ir_operator,i.ir_note");
+		$config['php_format']	= array("","date","","","","");
+		$config['key']			= "i.ir_id";
+		$config['join'][]		= array("mst_supplier ms","ms.msup_id = i.ir_supplier");
+		$config['searchColumn']	= array("ir_id");
+		$config['aksi']			= array(
+									'stat'  	=> true,
+									'key'		=> 'ir_id',
+									'pilih'	=> base_url().'gudang/retur/detail/',
+									);
+		init_datatable($config);
+	}
+
+	// simpan purchase
+
+	public function add_retur()
+	{
+		$data['main_view']	= 'retur/add_retur';
+		$data['title']		= 'Retur';
+		$data['cf']			= $this->cf;
+		$data['currency']	= $this->db->get('mst_currency');
+		$data['ir_id']		= $this->get_retur_id();
+		$this->load->view('template',$data);
+	}
+
+	function save_retur(){
+		$data 	= $this->input->post('ds');
+		$data['ir_supplier'] = $this->input->post('fx_supplier');
+		$dates 	= $this->input->post('ir_date_req');
+		$data['ir_date_req'] = date('Y-m-d', strtotime ($dates));
+		$this->db->insert('inv_retur', $data); 
+		$detail = $this->input->post();
+		foreach($detail['rows'] as $r){
+			$dts = explode('|',$r);
+			$dt = array(
+				'ir_id'			=> $data['ir_id'],
+				'ir_item'			=> $dts[0],
+				'ir_qty'			=> $dts[1]
+			);
+			$this->db->insert('inv_retur_detail', $dt);
+			$this->updateStok($dts[0],$dts[1]);
+		}
+		$this->session->set_flashdata('message',array('success','Data berhasil di buat'));
+	}
+
+
+	public function updateStok($istok_item,$returQty){
+		$this->db->where('istok_qty >','0');
+		$this->db->where('istok_item',$istok_item);
+		$this->db->order_by('istok_exp','asc');
+		$stok 		= $this->db->get('inv_item_stok')->row();
+		$oldStokId 	= $stok->istok_id;
+		$oldStok 	= $stok->istok_qty;
+		if( $returQty > $oldStok ){
+			$returQty 	= $returQty - $oldStok;
+			$dtUpdateStok['istok_qty'] 	= 0;
+			$this->db->where('istok_id',$oldStokId);
+			$this->db->update('inv_item_stok',$dtUpdateStok);
+			$this->updateStok($istok_item,$returQty);
+		}else{
+			$newStok 	= $oldStok - $returQty;
+			$dtUpdateStok['istok_qty'] 	= $newStok;
+			$this->db->where('istok_id',$oldStokId);
+			$this->db->update('inv_item_stok',$dtUpdateStok);
+		}
+	}
+
+	// detail
+	public function detail($ir_id)
+	{
+		$data['main_view']	= 'retur/detail_retur';
+		$data['title']		= $ir_id;
+		$data['cf']			= $this->cf;
+
+		$this->db->select('i.*,ms.msup_name');
+		$this->db->join('mst_supplier ms','i.ir_supplier = ms.msup_id');
+		$this->db->where('i.ir_id',$ir_id);
+		$data['retur']	= $this->db->get('inv_retur i')->row();
+
+		$this->db->select('id.*,im.im_name,im.im_unit,im_unit,im_item_price_buy,im_id');
+		$this->db->join('inv_item_master im','im.im_id = id.ir_item');
+		$this->db->where('id.ir_id',$ir_id);
+		$data['detail']		= $this->db->get('inv_retur_detail id');
+		$this->load->view('template',$data);
+	}
+
+	// fungsi lain
+
+	function get_retur_id(){
+		// $format = db_conv($this->db->get_where('com_code',array('id'=>1)))->value_1;
+		if( empty($format) )
+			$format = 'RE-';
+		$l = strlen($format)+1+4;
+		$q = "SELECT substr(ir_id, $l, 4) as n 
+			  from inv_retur where ir_id like '$format%' order by n desc limit 1"; 
+		$q = $this->db->query($q);
+		if($q->num_rows() == 0){
+			$no = '0001';
+		}else{
+			$nl = intval(db_conv($q)->n);
+			$nl++;
+			$no = rtrim(sprintf("%'04s\n",$nl));
+		}
+		return $format.DATE('y').DATE('m').$no;		
+	}
+
+	public function get_supplier()
+	{
+		$data = array();
+		$q = strtolower($_GET['q']);
+		$data = $this->db->select('msup_id as id,msup_name as name,msup_address as address')->like('lower(msup_id)', $q, 'both')->or_like('lower(msup_name)', $q, 'both')->or_like('lower(msup_address)', $q, 'both')->get('mst_supplier',100,0)->result_array();
+		echo json_encode(array('results'=> $data));
+	}
+
+
+	// cetak
+	public function cetak_retur($ir_id)
+	{
+		$data['title']		= $ir_id;
+		$data['cf']			= $this->cf;
+
+		$this->db->select('i.*,ms.msup_name');
+		$this->db->join('mst_supplier ms','i.ir_supplier = ms.msup_id');
+		$this->db->where('i.ir_id',$ir_id);
+		$data['retur']	= $this->db->get('inv_retur i')->row();
+
+		$this->db->select('id.*,im.im_name,im.im_unit,im_unit,im_item_price_buy,im_id');
+		$this->db->join('inv_item_master im','im.im_id = id.ir_item');
+		$this->db->where('id.ir_id',$ir_id);
+		$data['detail']		= $this->db->get('inv_retur_detail id');
+		$this->load->view('gudang/retur/cetak_retur',$data);
+	}
+
+}	// end class

@@ -1,0 +1,32 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class Master extends MY_Controller {
+
+	function __construct() {
+		parent::__construct();
+    }
+
+	public function index(){
+		$data['main_view']	= 'index';
+		$data['title']		= 'Manajemen Data';
+		$data['desc']		= 'Modul master. ';
+		$data['cf']		= $this->cf;
+		$this->load->view('template',$data);
+	}
+	
+	function tab_obat(){
+		$this->load->view('tab/tab_obat');
+	}
+	
+	function tab_user(){
+		$this->load->view('tab/tab_user');
+	}
+	
+	function tab_tindakan(){
+		$this->load->view('tab/tab_tindakan');
+	}
+	
+	function tab_service(){
+		$this->load->view('tab/tab_service');
+	}
+}

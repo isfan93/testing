@@ -1,0 +1,26 @@
+				<h3>Detil</h3>
+				<table  class="table table-bordered table-striped dyntable">
+					<thead>
+						<tr>
+							<th>Tanggal</th>
+							<th>Keterangan</th>
+							<th>Kelas</th>
+							<th>Harga</th>
+							<th>Jml</th>
+						</tr>
+					</thead>
+					<tbody>
+					<?foreach($detail as $detail):?>
+
+						<tr>
+							<td><?=$detail->date?></td>
+							<td><?=$detail->desc?></td>
+							<td><?=$detail->class_id?></td>
+							<td><?=$detail->amount?></td>
+							<td><?=$detail->total?></td>
+						</tr>
+					<?endforeach?>
+
+					 
+					</tbody>
+				</table>

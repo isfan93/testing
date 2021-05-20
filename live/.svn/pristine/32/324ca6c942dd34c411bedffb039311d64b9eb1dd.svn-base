@@ -1,0 +1,113 @@
+<style type="text/css" media="screen">
+	.noborder tr td{
+		border: 0px !important;
+	}
+	.table_tr thead th{
+		height: 28px;
+		vertical-align: middle;
+		font-size: 13px;
+	}
+	.table_tr tbody th{
+		height: 28px;
+		vertical-align: middle;
+		font-size: 13px;
+	}
+</style>
+<script type="text/javascript" charset="utf-8">
+	$(function(){
+		$('#back').click(function(){
+			window.history.back();
+		});
+	});
+</script>
+<div class="container-fluid">
+	<div class="row-fluid">
+		<div class="span3" >
+			<div class="title"><h3><?php echo $title;?></h3></div>
+		</div>
+	</div>
+	<br clear="all">
+	<div class="row-fluid">
+		<div class="widget-box">
+			<div class="span12">
+				<table class="table noborder" style="width:30%;float:left;">
+				    <tbody>
+					    <tr>
+					    	<td style="width:100px;">No. Faktur</td>
+					    	<td>: <b><?php echo $faktur->faktur_id;?></b></td>
+					    </tr>
+					    <tr>
+					    	<td style="width:100px;">Faktur Supplier</td>
+					    	<td>: <b><?php echo $faktur->faktur_number;?></b></td>
+					    </tr>
+					    <tr>
+					    	<td>Tanggal Faktur</td>
+					    	<td>: <?php echo pretty_date($faktur->faktur_date,false);?></td>
+					    </tr>
+					    <tr>
+					    	<td>Jatuh Tempo</td>
+					    	<td>: <b><?php echo pretty_date($faktur->faktur_date_maturity,false);?></b></td>
+					    </tr>
+					    <tr>
+					    	<td>petugas Penerima</td>
+					    	<td>: <?php echo $faktur->sd_name;?></td>
+					    </tr>
+				    </tbody>
+				</table>
+				<table class="table table-bordered table-stripped table_tr" style="width:68%;float:left;margin:10px;">
+				    <thead>
+					   <tr>
+					   		<th>Kode Item</th>
+					   		<th>Nama Item</th>
+					   		<th>Jumlah</th>
+					   		<th>Harga</th>
+					   		<th>Pajak</th>
+					   		<th>Sub Total</th>
+					   </tr>
+				    </thead>
+				    <tbody>
+				    	<?php
+				    	if( !empty($detail) ){
+					    	foreach ($detail->result() as $key => $value): ?>
+					    		<tr>
+					    			<td><?php echo $value->faktur_item;?></td>
+					    			<td><?php echo $value->im_name;?></td>
+					    			<td style="text-align:center;"><?php echo (float) $value->faktur_item_qty;?> <?php echo $value->mtype_name;?></td>
+					    			<td style="text-align:right;"><?php echo number_format(($value->faktur_item_price), 0, ",", ".");?></td>
+					    			<td style="text-align:right;"><?php echo number_format(($value->faktur_item_pajak), 0, ",", ".");?></td>
+					    			<td style="text-align:right;"><?php echo number_format(($value->faktur_item_total), 0, ",", ".");?></td>
+					    		</tr>
+					    		<?php
+					    	endforeach;
+					    	?>
+
+					    	<tr>
+					    		<td colspan="5" style="text-align:right;font-weight:bold;">PPN 10%</td>
+					    		<td colspan="" style="text-align:right;font-weight:bold;"><?php echo number_format(($faktur->faktur_pajak), 0, ",", ".");?></td>
+					    	</tr>
+					    	<tr>
+					    		<td colspan="5" style="text-align:right;font-weight:bold;">Sub Total</td>
+					    		<td colspan="" style="text-align:right;font-weight:bold;"><?php echo number_format(($faktur->faktur_price), 0, ",", ".");?></td>
+					    	</tr>
+					    	<tr>
+					    		<td colspan="5" style="text-align:right;font-weight:bold;">Diskon</td>
+					    		<td colspan="" style="text-align:right;font-weight:bold;"><?php echo number_format(($faktur->faktur_discount), 0, ",", ".");?></td>
+					    	</tr>
+					    	<tr>
+					    		<td colspan="5" style="text-align:right;font-weight:bold;">Total</td>
+					    		<td colspan="" style="text-align:right;font-weight:bold;"><?php echo number_format(($faktur->faktur_total), 0, ",", ".");?></td>
+					    	</tr>
+					    	<?php
+					    }
+				    	?>
+				    </tbody>
+				</table>
+			</div>
+			<br clear="all">
+            <div class="form-actions" style="margin-bottom:0px;">
+                <a id="cetak" href="<?=base_url()?>gudang/faktur/cetak/<?=$faktur->faktur_id?>" target="_blank" class="btn btn-primary pull-right">Cetak</a>
+                <button id="back" class="btn pull-right" type="reset" style="margin-right:10px;">Kembali</button>
+            </div>
+		</div>
+	</div>
+</div>

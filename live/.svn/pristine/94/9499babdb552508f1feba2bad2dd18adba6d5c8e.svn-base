@@ -1,0 +1,84 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class Lab extends MY_Controller {
+
+	function __construct() {
+		parent::__construct();
+	}
+
+	public function index(){
+		$data['main_view']	= 'kasir/lab/index';
+		$data['title']		= 'Kasir ';
+		$cf					= $this->cf;
+		$data['cf']			=  $cf;
+		$this->load->view('template',$data);
+	}
+
+	function get_transaksi($lab_queue_status = ''){
+		if( $lab_queue_status == '' ){
+			$lab_queue_status = 1;
+		}
+		$config['sTable'] 			= "trx_lab_queue t";
+		$config['aColumns'] 		= array("lab_queue_datetime","sd_name","sd_address","total_amount","total_pay");
+		$config['aColumns_format'] 	= array("lab_queue_datetime","sd_name","sd_address","tb.total_amount as total_amount","tb.total_pay as total_pay");
+		$config['key'] 				= "t.lab_queue_id";
+		$config['join'][]			= array("ptn_social_data p","p.sd_rekmed = t.sd_rekmed");
+		$config['join'][]			= array("trx_lab_bill tb","tb.lab_queue_id = t.lab_queue_id");
+		$config['where'][]			= "lab_queue_status = '$lab_queue_status'";
+		$config['php_format'] 		= array("date","","","money","money");
+		$config['searchColumn'] 	= array("sd_rekmed");
+		$config['aksi'] = array(
+								'stat'  	=> true,
+								'key'		=> 'lab_queue_id',
+								'pilih'	=> base_url().'kasir/lab/detail_transaksi/',
+								);
+		init_datatable($config);
+	}
+
+	function detail_transaksi($lab_queue_id){
+		$data['main_view']	= 'lab/transaksi';
+		$data['title']		= 'Detail Transaksi';
+		$cf					= $this->cf;
+		$data['cf']			=  $cf;
+		$data['insurance']	= $this->db->get('mst_insurance')->result();
+
+		$data['lab_queue_id'] = $lab_queue_id;
+		$trx_lab 		= $this->db->where('lab_queue_id',$lab_queue_id)->get('trx_lab_queue')->row();
+		$data['patient']	= $this->db->where('sd_rekmed',$trx_lab->sd_rekmed)->get('ptn_social_data')->row();
+
+		$data['lab_treathment'] = $this->db->get_where('trx_lab_treathment',array('lab_queue_id'=>$lab_queue_id));
+
+		$this->load->view('template',$data);
+	}
+
+	function cetak_nota($lab_queue_id){
+		$data['lab_queue_id'] = $lab_queue_id;
+		$trx_lab 		= $this->db->where('lab_queue_id',$lab_queue_id)->get('trx_lab_queue')->row();
+		$data['patient']	= $this->db->where('sd_rekmed',$trx_lab->sd_rekmed)->get('ptn_social_data')->row();
+		$data['lab_treathment'] = $this->db->get_where('trx_lab_treathment',array('lab_queue_id'=>$lab_queue_id));	
+		$this->load->view('kasir/lab/nota',$data);	
+	}
+
+	function bayar(){
+		$data = $this->input->post('ds');
+		// debug_array($data);
+		$sd_rekmed = $data['sd_rekmed'];
+		foreach ($data as $i => $v) {
+			if($i !== 'lab_queue_id' && $i !== 'sd_rekmed' && $i !== 'note' && $i !== 'ins_no' && $i !== 'ins_id'){
+				$data[$i] = preg_replace('/[^0-9]/', '', $v)/100;
+			}
+		}
+		// update mdc_status
+		unset($data['sd_rekmed']);
+		$data['lab_bill_status'] = 2;
+		$this->db->where('lab_queue_id', $data['lab_queue_id']);
+		$this->db->update('trx_lab_bill', $data);
+		// debug_array($this->db->last_query(),true);
+		// update queo_status
+		$data_queue['lab_queue_status'] = 2;
+		$this->db->where('lab_queue_id',$data['lab_queue_id']);
+		$this->db->update('trx_lab_queue',$data_queue);
+		// redirect(base_url()."kasir/lab");
+	} 
+
+}

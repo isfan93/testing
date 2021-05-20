@@ -1,0 +1,195 @@
+<?php
+
+if (!defined('BASEPATH'))
+    exit('No direct script access allowed');
+
+class Rekam_medis extends MY_Controller {
+
+    function __construct() {
+        parent::__construct();
+        // local variable
+        // model 
+        $this->load->model('rekam_medis_model');
+        $this->load->model('rawat_jalan/poli_model', 'poli_model');
+
+        // keterangan kode
+    }
+
+    function index() {
+        $data['main_view'] = 'rekam_medis/index';
+        $data['title'] = 'Rekam Medis';
+        $data['cf'] = $this->cf;
+        $data['current'] = '';
+        $data['desc'] = 'Description. ';
+        $this->load->view('template', $data);
+    }
+
+    function kunjungan_hari_ini() {
+        $data['main_view'] = 'rekam_medis/kunjungan_hari_ini';
+        $data['title'] = 'Rekam Medis';
+        $data['cf'] = $this->cf;
+        $data['current'] = '';
+        $data['desc'] = 'Description. ';
+        $this->load->view('template', $data);
+    }
+
+//    function get_kunjungan($visit_status = 4) {
+//
+//        $config['sTable'] = "trx_visit t";
+//        $config['aColumns'] = array("visit_in", "sd_rekmed", "sd_name", "sd_address", "visit_type", "dr_name");
+//        $config['aColumns_format'] = array("t.visit_in", "p.sd_rekmed", "p.sd_name", "p.sd_address", "t.visit_type", "me.sd_name as dr_name");
+//        $config['php_format'] = array("date", "", "strtoupper", "", "strtoupper", "", "");
+//        $config['key'] = "t.visit_id";
+//        $config['join'][] = array("ptn_social_data p", "p.sd_rekmed = t.visit_rekmed");
+//        // $config['join'][]		= array("trx_visit_bill tvb","tvb.visit_id = t.visit_id");
+//        // $config['join'][]		= array("mst_insurance msti","tvb.ins_id = msti.ins_id");
+//        $config['join'][] = array("trx_medical tm", "tm.mdc_id = t.visit_id");
+//        $config['join'][] = array("mst_employer me", "me.id_employe = tm.dr_id");
+//        $config['join'][] = array("mst_poly mp", "mp.pl_id = tm.pl_id");
+//        $config['where'][] = "t.visit_status >= '$visit_status'";
+//        $config['searchColumn'] = array("sd_name");
+//        $config['aksi'] = array(
+//            'stat' => true,
+//            'key' => 'visit_id',
+//            'pilih' => base_url() . 'rekam_medis/ringkasan/',
+//        );
+//        init_datatable($config);
+//    }
+
+    function semua_pasien() {
+        $config['sTable'] = "ptn_social_data p";
+        $config['aColumns'] = array("sd_rekmed", "sd_name", "sd_status");
+        $config['aColumns_format'] = array("p.sd_rekmed", "p.sd_name", "p.sd_status");
+        $config['php_format'] = array("", "", "statusverbose");
+        $config['key'] = "p.sd_rekmed";
+        $config['searchColumn'] = array("sd_rekmed", "sd_name", "sd_status");
+        $config['aksi'] = array(
+            'stat' => true,
+            'key' => 'sd_rekmed',
+            'custom' => array(
+                array(
+                    'title' => 'Histori Kunjungan',
+                    'class' => 'visit-list',
+                    'href' => array('url' => base_url() . 'rekam_medis/semua_kunjungan/', 'uid' => 'sd_rekmed'),
+                    'text' => 'Histori Kunjungan',
+                ),
+                array(
+                    'title' => 'Cetak Barcode',
+                    'class' => 'btn-info',
+                    'href' => array('url' => 'javascript:void(0);', 'uid' => ''),
+                    'text' => 'Barcode',
+                    'attributes' => array('type' => 'openInNewTab', 'url' => base_url() . 'pendaftaran/cetak_barcode/', 'uid' => 'sd_rekmed'),
+                ), array(
+                    'title' => 'Cetak Form Pasien',
+                    'class' => 'btn-warning',
+                    'href' => array('url' => 'javascript:void(0);', 'uid' => ''),
+                    'text' => 'Form Pasien',
+                    'attributes' => array('type' => 'openInNewTab', 'url' => base_url() . 'pendaftaran/cetak_form_pasien/', 'uid' => 'sd_rekmed'),
+                ))
+        );
+        init_datatable($config);
+    }
+
+    function semua_kunjungan($no_rekmed) {
+        $data['no_rekmed'] = $no_rekmed;
+        $this->load->view('histori_pasien', $data);
+    }
+
+    function histori_pasien($no_rekmed) {
+        //prepare table format for datatable
+        $config['sTable'] = "trx_visit t";
+        $config['aColumns'] = array("visit_in", "visit_out", "visit_type",);
+        $config['aColumns_format'] = array("t.visit_in", "t.visit_out", "t.visit_type");
+        $config['php_format'] = array("date", "date", "strtoupper");
+        $config['key'] = "t.visit_id";
+        $config['searchColumn'] = array("visit_type,visit_in");
+        $config['where'][] = "visit_rekmed = '$no_rekmed'";
+        $config['aksi'] = array(
+            'stat' => true,
+            'key' => 'visit_id',
+            'custom' => array(
+                array(
+                    'title' => 'Rekam Medis',
+                    'class' => '',
+                    'href' => array('url' => base_url() . 'rekam_medis/ringkasan/', 'uid' => 'visit_id'),
+                    'text' => 'Rekam Medis',
+                ),
+                array(
+                    'title' => 'Cetak Tracer',
+                    'class' => 'btn-warning',
+                    'href' => array('url' => 'javascript:void(0);', 'uid' => ''),
+                    'text' => 'Tracer',
+                    'attributes' => array('type' => 'openInNewTab', 'url' => base_url() . 'pendaftaran/cetak_tracer_khusus/', 'uri_segment' => array('visit_type'), 'uid' => 'visit_id'),
+                ))
+        );
+        init_datatable($config);
+    }
+
+    function rawat_jalan() {
+        //prepare table format for datatable
+        $config['sTable'] = "trx_visit t";
+        $config['aColumns'] = array("sd_rekmed", "sd_name", "vs_name", 'pl_name', "dr_name");
+        $config['aColumns_format'] = array("p.sd_rekmed", "p.sd_name", "vs.vs_name", "pl_name", "me.sd_name as dr_name", "t.visit_type", "t.visit_in");
+        $config['php_format'] = array("", "titlecase", "", "", "", "");
+        $config['key'] = "t.visit_id";
+        $config['join'][] = array("ptn_social_data p", "p.sd_rekmed = t.visit_rekmed");
+        $config['join'][] = array("mst_visit_status vs", "vs.vs_id = t.visit_status");
+        $config['leftjoin'][] = array("trx_medical tm", "tm.mdc_id = t.visit_id");
+        $config['leftjoin'][] = array("mst_employer me", "me.id_employe = tm.dr_id");
+        $config['leftjoin'][] = array("mst_poly mp", "mp.pl_id = tm.pl_id");
+        $config['where'][] = "t.visit_type = 'rajal'";
+        $config['where'][] = "DATEDIFF(NOW(),visit_in) = 0";
+        $config['searchColumn'] = array("sd_name");
+        $config['aksi'] = array(
+            'stat' => true,
+            'key' => 'visit_id',
+            'detail' => base_url() . 'rekam_medis/ringkasan/',
+            'custom' => array(
+                array(
+                    'title' => 'Cetak Tracer',
+                    'class' => 'btn-warning',
+                    'href' => array('url' => 'javascript:void(0);', 'uid' => ''),
+                    'text' => 'Tracer',
+                    'attributes' => array('type' => 'openInNewTab', 'url' => base_url() . 'pendaftaran/cetak_tracer/', 'uri_segment' => array('visit_type'), 'uid' => 'visit_id'),
+                ),
+                array(
+                    'title' => 'Cetak Barcode',
+                    'class' => 'btn-info',
+                    'href' => array('url' => 'javascript:void(0);', 'uid' => ''),
+                    'text' => 'Barcode',
+                    'attributes' => array('type' => 'openInNewTab', 'url' => base_url() . 'pendaftaran/cetak_barcode/', 'uid' => 'sd_rekmed'),
+                ))
+        );
+        init_datatable($config);
+    }
+
+    //ringkasan
+    function ringkasan($visit_id) {
+        $data['main_view'] = 'rekam_medis/ringkasan';
+        $data['title'] = 'Rekam Medis';
+        $data['cf'] = $this->cf;
+        $data['current'] = '';
+        $data['desc'] = 'Description. ';
+        $data['mdc_id'] = $visit_id;
+        $data['dokter'] = $this->poli_model->get_dokter($visit_id)->row();
+        $data['medical'] = $this->db->get_where('trx_visit', array('visit_id' => $visit_id));
+        $data['diagnosa'] = $this->poli_model->get_diagnosa($visit_id);
+        $data['detail_diagnosa'] = $this->poli_model->get_detail_diagnosa($visit_id);
+        $data['obat'] = $this->poli_model->get_detail_resep($visit_id);
+        $data['anamnesa'] = $this->db->get_where('trx_medical_anamnesa', array('mdc_id' => $visit_id));
+        $data['objective'] = $this->db->get_where('trx_medical_objective', array('mdc_id' => $visit_id));
+        $data['surat_keterangan'] = $this->db->get_where('trx_reference', array('mdc_id' => $visit_id));
+        $data['ptn_now'] = $this->poli_model->get_medical_ptn_now($visit_id);
+        $medical_lab = $this->poli_model->cek_is_exist_medical_lab($visit_id);
+        if ($medical_lab->num_rows() >= 1) {
+            $medical_lab = $medical_lab->row();
+            $lab_queue_id = $medical_lab->lab_queue_id;
+        } else {
+            $lab_queue_id = $visit_id;
+        }
+        $data['penunjang'] = $this->poli_model->get_trx_penunjang($lab_queue_id);
+
+        $this->load->view('template', $data);
+    }
+
+}

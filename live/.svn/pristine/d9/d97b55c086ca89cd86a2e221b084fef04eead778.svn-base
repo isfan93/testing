@@ -1,0 +1,104 @@
+<div class="container-fluid" style="margin-top:20px;">
+	<div class="row-fluid">
+		<div class="span12">
+			<div class="widget-box">
+				<?php $this->load->view('print_header');?>
+				<div class="body-surat">
+					<div class="span12">
+						<div class="text-body-surat">
+							<h5 style="text-align:center;">
+								<?php echo strtoupper($title); ?>
+							</h5>
+							<table style="font-size:12px;width:50%;float:left;">
+								<tr>
+									<td>Nama Pasien</td>
+									<td>: <?php echo (isset($patient->sd_name))? $patient->sd_name : '-';?></td>
+								</tr>
+								<tr>
+									<td>Tempat Lahir</td>
+									<td>: <?php echo (isset($patient->sd_place_of_birth))? $patient->sd_place_of_birth : '-';?></td>
+								</tr>
+								<tr>
+									<td>Tanggal Lahir</td>
+									<td>: <?php echo (isset($patient->sd_date_of_birth)) ? pretty_date($patient->sd_date_of_birth,false) : '-';?></td>
+								</tr>
+							</table>
+							<table style="font-size:12px;width:50%;float:left;">
+								<tr>
+									<td style="width:30%;">Jenis Kelamin</td>
+									<td>: <?php echo isset($patient->sd_sex) ? $patient->sd_sex : '-';?></td>
+								</tr>
+								<tr>
+									<td style="width:30%;">No. Rekam Medis</td>
+									<td>: <?php echo isset($sd_rekmed) ? $sd_rekmed : '-';?></td>
+								</tr>
+							</table>
+							<br clear="all">
+							<h6>Rincian Pemeriksaan :</h6>
+							<table style="font-size:12px;margin-top:10px;width:98%;" class="rincian">
+								<thead>
+									<tr>
+										<th style="text-align:left;">Penggunaan</th>
+										<th style="text-align:right;">Harga</th>
+										<th style="text-align:right;">Tanggungan</th>
+									</tr>
+								</thead>
+								<tbody>
+								<?php
+								$total = $tertanggung = 0;
+								foreach ($mst_bill->result() as $key => $value) {
+									if( isset($trx_visit_bill_detail[$value->service_id]) )
+									{
+										?>
+										<tr>
+											<td colspan="4" style="font-weight:bold;">
+												<?php echo $value->service_name;?>
+											</td>
+										</tr>
+										<?php
+										foreach ($trx_visit_bill_detail[$value->service_id] as $k => $v) {
+											?>
+											<tr>
+												<td><?php echo (isset($v->service_name))? $v->service_name : '-';?></td>
+												<td style="text-align:right;"><?php echo number_format($v->price, 2, ",", "."); ?></td>
+												<td style="text-align:right;"><?php echo number_format($v->total_price, 2, ",", "."); ?></td>
+											</tr>
+											<?php
+											$total 	+= $v->price;
+											$tertanggung 	+= $v->total_price;
+										}
+									}
+								}
+								?>
+								<tr style="border-top:1px solid black;">
+									<th colspan="2" style="text-align:right;">Total Tanggungan</th>
+									<th style="text-align:right;"><?php echo number_format($tertanggung, 2, ",", ".");?></th>
+								</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+					<div class="span4 offset8" style="margin-top:20px;">
+						<div class="text-body-surat">
+							<p>
+								<?php echo pretty_date(date('Y-m-d'),false);?><br>
+								Rumah Sakit Intan Husada<br>
+								Petugas Kasir,
+							</p>
+							<p style="margin-top:80px;margin-bottom:20px;font-weight:bold;">
+								<?php
+								echo get_user('sd_name');
+								?>
+							</p>
+						</div>	
+					</div>
+				<br clear="all">
+				</div>
+				<br clear="all">
+				<div class="footer-surat">
+					
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

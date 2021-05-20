@@ -1,0 +1,106 @@
+<style type="text/css">
+    #diagnoseTable thead tr th{
+        height:28px;
+        font-size:13px;
+        vertical-align: middle;
+    }
+
+    .ffb-input{
+        background: transparent;
+        border: none;
+        /*border-bottom: 1px dotted gray;*/
+    }
+    .ffb{
+        width: 600px !important;
+    }
+    #fx_item.ffb{
+        width:350px !important;
+        top: 28px !important;
+    }
+    #fx_item_ctr .row .col1{
+        float:left;
+        width:10px;
+    }
+    #fx_item_ctr .row .col2{
+        float:left;
+        margin-left: 15px;
+        width:220px;
+    }
+    .ffb-input{
+        width: 305px !important;
+    }
+</style>
+
+<div class="widget-box">
+    <?= form_open('#', array('class' => 'form-horizontal', 'id' => 'diagnoseForm')); ?>
+    <div class="widget-content nopadding">
+        <table id="diagnoseTable" cellpadding="0" cellspacing="0" border="0" class="table table-bordered" style="border-left:none;">
+            <thead>
+                <tr role="row">
+                    <th class="" style="border-left:none;width:2%;">No.</th>
+                    <th class="" style="width:20%;">Diagnose</th>
+                    <th class="" style="width:20%;">Procedures</th>
+                    <th class="" style="width:20%;">Jenis kasus</th>
+                    <th class="" style="width:20%;">Catatan</th>
+                </tr>
+            </thead>
+            <tbody>
+
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="4" style="border-left:none;">
+                        <button type="button" id="addDiagnose" class="btn btn-warning btn-small" style="margin-left:45%;"><i class="icon-plus icon-white"></i> Tambah Diagnosa</button>
+                    </td>
+                </tr>
+            </tfoot>
+        </table>							
+    </div>
+    <?= form_close() ?> 
+</div>
+
+<script>
+    var diagnoseIndex = 0;
+    function addDiagnose() {
+        diagnoseIndex++;
+        var str = ("<tr>");
+        str += ("<td style='text-align:center;vertical-align:middle;width:10px !important;border-left:none;'><b>" + diagnoseIndex + "</b></td>");
+        str += ("<td style='width:20%;'><div id='" + diagnoseIndex + "_fx_diagnosa' id_diagnosa='" + diagnoseIndex + "' class='fx_diagnosa' style='width:98%;border-bottom:1px dotted gray;''></div></td>");
+        str += ("<td style='width:20%;'><div id='" + diagnoseIndex + "_fx_tindakan' class='fx_tindakan' style='width:98%;border-bottom:1px dotted gray;''></div></td>");
+        str += ("<td style='padding:5px;width:20%;'><input type='radio' id='" + diagnoseIndex + "_case_new' name='case_" + (diagnoseIndex - 1) + "' value='new' style='float:left;'>\n\
+                    <label for='" + diagnoseIndex + "_case_new' style='cursor:pointer;float:left;margin-left:10px;'>Kasus Baru</label><br clear='all'/>\n\
+                    <input type='radio' id='" + diagnoseIndex + "_case_old' name='case_" + (diagnoseIndex - 1) + "' value='old' style='float:left;'  > &nbsp;\n\
+                    <label for='" + diagnoseIndex + "_case_old' style='cursor:pointer;float:left;margin-left:10px;'>Kasus Lama</label></td>");
+        str += ("<td style='padding:5px;width:20%;'><textarea id='" + diagnoseIndex + "_note' name='diag_note[]' cols='4' rows='2' placeholder='Catatan'></textarea></td>");
+        str += ("</tr>");
+        $("#diagnoseTable tbody").append(str);
+        $('#' + diagnoseIndex + '_fx_diagnosa').flexbox('<?= base_url() ?>' + 'rawat_jalan/poli_umum/get_diagnosa', {
+            paging: false,
+            showArrow: false,
+            maxVisibleRows: 0,
+            width: 300,
+            resultTemplate: '{name}({desc})'
+        });
+        $('#' + diagnoseIndex + '_fx_tindakan').flexbox('<?= base_url() ?>' + 'rawat_jalan/poli_umum/get_tindakan', {
+            paging: false,
+            showArrow: false,
+            maxVisibleRows: 0,
+            width: 300,
+            resultTemplate: '{name}',
+            onSelect: function () {
+                var id = $(this).parent().find('input:eq(0)').val();
+            }
+        });
+        $(".fx_diagnosa").find('input:eq(0)').attr('name', 'diag_id[]');
+        $(".fx_tindakan").find('input:eq(0)').attr('name', 'treat_id[]');
+        $(".fx_diagnosa").find('input:eq(1)').attr('name', '');
+        $(".fx_tindakan").find('input:eq(1)').attr('name', '');
+    }
+
+    $(document).ready(function () {
+        addDiagnose();
+        $("#addDiagnose").click(function () {
+            addDiagnose();
+        });
+    });
+</script>

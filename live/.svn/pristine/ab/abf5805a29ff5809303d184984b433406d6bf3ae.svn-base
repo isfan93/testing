@@ -1,0 +1,83 @@
+<style type="text/css" media="screen">
+    .dataTables_scrollHead{
+        margin-bottom: -22px;
+    }
+    .dataTables_info{
+        margin-top: 20px;
+    }
+    .dataTables_filter{
+        display:none;
+    }
+</style>
+<div class="container-fluid">
+    <div class="row-fluid">
+        <div class="span12">
+            <div class="title">
+                <h3><?php echo $desc; ?>  
+                    <span class="tgl-sekarang"></span> 
+                </h3>
+            </div>
+            <div id="basic" style="float:right;width:300px">
+                <div class="chatsearch">
+                    <input type="text" name="" placeholder="Search" style="width:85%;margin:auto;">
+                </div>
+            </div>
+            <table class="table table-bordered def_table_y dataTable tb_scrol" align="center">
+                <thead>
+                    <tr role="row">
+                        <th>Tanggal Masuk</th>
+                        <th>No Rekam Medis</th>
+                        <th>Nama Pasien</th>
+                        <th>Kelas</th>
+                        <th>Ruang</th>                    
+                        <th>Aksi</th>                    
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($current_patient as $key => $value) : ?>
+                        <tr>
+                            <td><?=$value->visit_in?></td>
+                            <td><?=$value->sd_rekmed?></td>
+                            <td><?=$value->sd_name?></td>
+                            <td><?=$value->class_name?></td>
+                            <td><?=$value->room_id?></td>
+                            <td></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+                <tfoot>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript" charset="utf-8">
+    $(function() {
+        //table scrol Yalert();
+        var otb;
+        otb = $('.def_table_y').dataTable({
+            "sPaginationType": "bootstrap",
+            "sScrollY": "400px",
+            "bPaginate": false,
+            "aoColumnDefs": [
+                {"bSortable": true, "aTargets": [0]},
+                {"bSortable": true, "aTargets": [1]},
+                {"bSortable": true, "aTargets": [2]}
+            ]
+        });
+        $(".tb_scrol tbody tr").click(function() {
+            var rm = $(this).find('#rm').val();
+            var mdc_id = $(this).find('#mdc_id').val();
+            $(".tb_scrol tbody tr.active").removeClass('active');
+            var url = '<?= cur_url() ?>data_diri/' + rm + '/' + mdc_id;
+            $("#data_diri").load(url);
+            $(this).addClass('active');
+        });
+        $(".chatsearch input").keyup(function(e) {
+            $(".dataTables_filter input").val($(".chatsearch input").val()).trigger('keyup');
+        });
+        $(".tb_scrol tbody tr:eq(0)").trigger('click');
+
+    });
+</script>

@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Cetak Tracer | SIMRS IH</title>
+        <script src="<?=base_url()?>assets/js/jquery.min.js"></script>
+    </head>
+    <body>
+        <style>
+            table{border : 1px solid;padding:5px;width:292px;font-size:14px;}
+            th{text-align:center;font-size:16px;font-weight:bold}
+            td{margin:0px;padding:5px;height:100%}
+        </style>
+        <?php
+        $singleTracer = $tracer->row();
+        ?>
+        <table>
+            <thead>
+            <tr>
+                <th colspan="3" style>Tracer</td>
+            </tr>
+            <thead>
+            <tbody>
+                <tr>
+                    <td>Tanggal / Waktu</td>
+                    <td>:</td>
+                    <td><?=$singleTracer->visit_time?></td>
+                </tr>
+                <tr>
+                    <td>No Rekam Medis</td>
+                    <td>:</td>
+                    <td><?=$singleTracer->medical_record?></td>
+                </tr>
+                <tr>
+                    <td>Nama Pasien</td>
+                    <td>:</td>
+                    <td><?=$singleTracer->patient?></td>
+                </tr>
+                <?php
+                    foreach ($tracer->result() as $key => $value) {
+                        if(isset($value->pl_name)){
+                            ?>
+                            <tr>
+                                <td>Poli </td>
+                                <td>:</td>
+                                <td><?=$value->pl_name?></td>
+                            </tr>
+                            <?php
+                        }
+                        if(isset($value->dr_name)){
+                            ?>
+                            <tr>
+                                <td>Dokter </td>
+                                <td>:</td>
+                                <td><?=$value->dr_name?></td>
+                            </tr>
+                            <?php
+                        }
+                    }
+                ?>
+                <tr>
+                    <td>Unit</td>
+                    <td>:</td>
+                    <td>
+                    	<?php foreach ($tracer->result() as $key => $value) {
+                    		switch ($value->visit_type) {
+                    			case 'rajal':
+                    				echo "Rawat Jalan / ";
+                    				break;
+                    			case 'ranap':
+                    				echo "Rawat Inap / ";
+                    				break;
+                    			case 'lab':
+                    				echo "Laboratorium / ";
+                    				break;
+                    			case 'rad':
+                    				echo "Radiologi / ";
+                    				break;
+                                case 'igd':
+                                    echo "IGD / ";
+                                    break;
+                    		}
+                    	}?>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <script>
+            $(function() {window.print();});
+        </script>
+    </body>
+</html>

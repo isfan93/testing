@@ -1,0 +1,19 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class IGD extends MY_Controller {
+
+	function __construct() {
+		parent::__construct();
+		$this->cf = array(
+				'modul_id'	=> 4
+			);
+	}
+
+	public function index(){
+		$data['main_view']	= 'IGD/index';
+		$data['title']		= 'Title ';
+		$data['desc']		= 'Description. ';
+		$data['cf']			=  $this->cf;
+		$this->load->view('template',$data);
+	}
+}

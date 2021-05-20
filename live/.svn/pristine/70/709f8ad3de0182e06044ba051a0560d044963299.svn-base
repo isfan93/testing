@@ -1,0 +1,108 @@
+<link rel="stylesheet" href="<?=base_url()?>assets/css/jquery.gritter.css" />
+<style>
+	.table_tr thead th{
+		height: 28px;
+		vertical-align: middle;
+		font-size: 13px;
+	}
+	#content{
+		/*min-height: 300px;*/
+	}
+
+	.alert{
+        background-color: transparent;
+        border: 0px;
+    }
+
+    #gritter-notice-wrapper{
+        right: 13%;
+        top: 100px;
+    }
+</style>
+<script type="text/javascript">
+	$(function(){
+		isvalid = $("#form").validate({
+			rules: {
+	            
+	        },
+	        submitHandler: function(form) {
+	            var url  = $("#form").attr('action');
+	            var data = jQuery(form).serialize();
+	            $.post(url,data, function(data){
+	                $(".alert").fadeIn().delay(1000).fadeOut(function(){
+	                    $("#save").trigger('click'); 
+	                    window.location.href = (document.referrer);
+	                });     
+	            }); 
+	            // return false;
+	        }
+	    });
+
+        $(".back").click(function(){
+        	window.history.back()
+        });
+
+	});
+</script>
+
+<div id="gritter-notice-wrapper" class="alert hide" style="width:750px;position:fixed">
+    <div id="gritter-item-1" class="gritter-item-wrapper" style="margin:0 -17px 5px 0">
+        <div class="gritter-top"></div>
+        <div class="gritter-item">
+            <div class="gritter-close" style="display: none; width:50px "></div>
+            <img src="<?=base_url()?>assets/img/demo/envelope.png" class="gritter-image">
+            <div class="gritter-with-image" style="width:448px">
+                <span class="gritter-title" style="margin-left:36px">Message</span>
+                <p>Data Berhasil Disimpan   </p>
+            </div>
+            <div style="clear:both"></div>
+        </div>
+        <div class="gritter-bottom"></div>
+    </div>
+</div>
+
+<div class="container-fluid">
+    <div class="row-fluid">
+        <div class="span3" >
+            <div class="title"><h3><?php echo $pembelian->tdb_number;?></h3></div>
+        </div>
+    </div>
+    <div class="row-fluid">
+    	<div class="span12" style="margin-top:20px;">
+			<table class="table table-bordered table-striped table_tr">
+				<thead>
+					<tr>
+						<th>No</th>
+						<th>Nama Item</th>
+                        <th>Jumlah</th>
+                        <th>Harga Satuan</th>
+						<th>Total</th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php
+                        foreach ($pembelian_detail as $key => $value) {
+                            ?>
+                                <tr>
+                                    <td style="text-align:center;width:5%;"><?=($key + 1)?></td>
+                                    <td style="width:30%;"><?=$value->im_name?></td>
+                                    <td style="text-align:center;width:20%;"><?=$value->tdb_qty?> <?=$value->mtype_name?></td>
+                                    <td style="text-align:right;width:20%;"><?=number_format($value->tdb_price_per_unit, 2, ",", ".")?></td>
+                                    <td style="width:20%;text-align:right"><?=number_format($value->tdb_price, 2, ",", ".")?></td>
+                                </tr>
+                            <?php
+                        }
+					?>
+				</tbody>
+			</table>
+			<?=form_open(base_url().'apotek/pembelian_umum/simpan/'.$pembelian->tdb_number,array('class' => 'form-horizontal','id' => 'form')); ?>
+			<input type="hidden" name="ds[visit_id]" value="<?=$pembelian->visit_id?>">			
+			<div style="text-align:right;margin-top:20px">
+                <button type="button" class="btn btn-danger back">Kembali</button>
+                <?php $status   = ($pembelian->visit_status == 5) ? 'disabled ' : ''?>
+				<button type="submit" class="btn btn-primary" <?php echo $status;?> >Kurangi Stok</button>
+			</div>
+			<?=form_close()?>
+		</div>
+    </div>
+</div>

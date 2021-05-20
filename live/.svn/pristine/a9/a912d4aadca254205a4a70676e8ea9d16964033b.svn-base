@@ -1,0 +1,166 @@
+<?php
+
+if (!defined('BASEPATH'))
+    exit('No direct script access allowed');
+
+class Rawat_inap_model extends MY_Controller {
+
+    function __construct() {
+        parent::__construct();
+    }
+
+    function currentPatient() {
+        $this->db
+                ->select('tv,visit_id,tv.visit_in,p.sd_rekmed,p.sd_name,c.class_name,r.room_id')
+                ->join('ptn_social_data p', 'p.sd_rekmed = tv.visit_rekmed')
+                ->join('hos_bed_occupation h', 'h.visit_id = tv.visit_id')
+                ->join('mst_bed b', 'b.bed_id = h.bed_id')
+                ->join('mst_room r', 'r.room_id = b.room_id')
+                ->join('mst_class c', 'c.class_id = r.class_id')
+                ->where('tv.visit_out', '0000-00-00 00:00:00');
+        $query = $this->db->get('trx_visit tv');
+
+        if ($query->num_rows() > 0) {
+            return $query->result();
+        } else {
+            return array();
+        }
+    }
+
+    function getPatientData($visit_id) {
+        $this->db
+                ->select('tv.visit_id,p.sd_rekmed,p.sd_name,p.sd_address,p.sd_sex,p.sd_age,p.sd_blood_tp,p.sd_alergi,p.sd_riwayat_penyakit,tv.visit_in')
+                ->join('trx_visit tv', 'tv.visit_rekmed = p.sd_rekmed')
+                ->where('tv.visit_id', $visit_id);
+        $query = $this->db->get('ptn_social_data p');
+
+        if ($query->num_rows() > 0) {
+            return $query->row_array();
+        } else {
+            return array();
+        }
+    }
+
+    function getPhysician() {
+        $this->db
+                ->select('m.id_employe,m.sd_name')
+                ->where('m.sd_employe_tp', 1);
+        $query = $this->db->get('mst_employer m');
+
+        if ($query->num_rows() > 0) {
+            return $query->result_array();
+        } else {
+            return array();
+        }
+    }
+
+    function getNurses() {
+        $this->db
+                ->select('m.id_employe,m.sd_name')
+                ->where('m.sd_employe_tp', 2)
+                ->where('m.sd_type_user', 24);
+        $query = $this->db->get('mst_employer m');
+
+        if ($query->num_rows() > 0) {
+            return $query->result_array();
+        } else {
+            return array();
+        }
+    }
+
+    function calculateBill($visit_id) {
+        
+    }
+
+    function saveExamination() {
+        $visit_id = $this->uri->segment(3);
+        $physician_id = $this->input->post('physician');
+        $nurse_id = $this->input->post('nurse');
+        $vital_sign = $this->input->post('vs');
+        $subjective = $this->input->post('subjective');
+        $objective = $this->input->post('objective');
+        $diag_id = $this->input->post('diag_id');
+        $treat_id = $this->input->post('treat_id');
+        $diag_note = $this->input->post('diag_note');
+        $med_id = $this->input->post('med_id');
+        $uses = $this->input->post('uses');
+        $day = $this->input->post('day');
+        $rule = $this->input->post('rule');
+        $med_note = $this->input->post('med_note');
+        $quantity = $this->input->post('quantity');
+
+        $last_exam_id = $this->db->like('examination_id', $visit_id, 'after')->order_by('examination_id', 'DESC')->get('hos_examination', 1, 0)->row();
+        $examination_id = count($last_exam_id) == 0 ? $visit_id . '001' : $examination_id + 1;
+
+        //arrange data for table hos_examination insertion
+        $exam_data = compact('visit_id', 'examination_id', 'physician_id', 'nurse_id');
+
+        //arrange data for table hos_vital_sign insertion
+        $vs_data = array(
+            'examination_id' => $examination_id,
+            'blood_type' => $vital_sign['blood_type'],
+            'weight' => $vital_sign['weight'],
+            'height' => $vital_sign['height'],
+            'systole' => $vital_sign['blood_pressure']['systole'],
+            'diastole' => $vital_sign['blood_pressure']['diastole'],
+            'consciousness' => $vital_sign['consciousness'],
+            'pulse' => $vital_sign['pulse'],
+            'respiration_rate' => $vital_sign['respiration_rate'],
+            'temperature' => $vital_sign['temperature'],
+        );
+
+        //arrange data for table hos_sub_obj insertion
+        $subobj_data = array(
+            'examination_id' => $examination_id,
+            'subjective' => $subjective,
+            'objective' => $objective,
+        );
+
+        //arrange data for hos_diagnose and hos_medication insertion
+        $diag_data = $treat_data = $prescription_details_data = $bill_data = $rcp_detail_data =array();
+        for ($i = 0; $i < count($diag_id); $i++) {
+            $diag_data[$i]['examination_id'] = $examination_id;
+            $diag_data[$i]['diagnose_id'] = $diag_id[$i];
+            $diag_data[$i]['case_type'] = $this->input->post("case_{$i}") ? $this->input->post("case_{$i}") : '';
+            $diag_data[$i]['note'] = $diag_note[$i];
+        }
+
+        for ($i = 0; $i < count($treat_id); $i++) {
+            $treat_data[$i]['examination_id'] = $examination_id;
+            $treat_data[$i]['diagnose_id'] = $diag_id[$i];
+            $treat_data[$i]['treatment_id'] = $treat_id[$i];
+        }
+
+        //insert to table trx_recipe and trx_recipe_details
+        $prescription_id = Modules::run('rawat_jalan/poli_umum/gen_id');
+        $prescription_data = array(
+            'prescription_id' => $prescription_id,
+            'examination_id' => $examination_id,
+            'status' => 0
+        );
+
+        for ($i = 0; $i < count($med_id); $i++) {
+            $prescription_details_data[$i]['prescription_id'] = $prescription_id;
+            $prescription_details_data[$i]['medicine_id'] = $med_id[$i];
+            $prescription_details_data[$i]['uses'] = $uses[$i];
+            $prescription_details_data[$i]['day'] = $day[$i];
+            $prescription_details_data[$i]['note'] = $med_note[$i];
+            $prescription_details_data[$i]['rule'] = $rule[$i];
+            $prescription_details_data[$i]['quantity'] = $quantity[$i];
+        }
+        
+        $this->db->trans_start();
+        $success1 = $this->repo_model->insert('hos_examination', $exam_data);
+        $success2 = $this->repo_model->insert('hos_vital_sign', $vs_data);
+        $success3 = $this->repo_model->insert('hos_sub_obj', $subobj_data);
+        $success4 = $this->repo_model->insert('hos_prescription', $prescription_data);
+        $success5 = $this->db->insert_batch('hos_diagnose', $diag_data);
+        $success6 = $this->db->insert_batch('hos_treatment', $treat_data);
+        $success7 = $this->db->insert_batch('hos_prescription_details', $prescription_details_data);
+        $this->db->trans_complete();
+
+        $success = $success1 && $success2 && $success3 && $success4 && $success5 && $success6 && $success7;
+        return $success;
+    }
+
+}

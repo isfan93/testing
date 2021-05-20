@@ -1,0 +1,509 @@
+<?php
+
+if (!defined('BASEPATH'))
+    exit('No direct script access allowed');
+
+class Resep_pasien extends MY_Controller {
+
+    function __construct() {
+        parent::__construct();
+    }
+
+    public function index() {
+        $data['main_view'] = 'resep_pasien/index';
+        $data['title'] = 'Resep Pasien';
+
+        $this->db->select('t.visit_type,t.visit_out,p.sd_rekmed,p.sd_name,p.sd_address,tr.recipe_id');
+        $this->db->join('trx_medical_ptn_now tpn', 'tpn.mdc_id = t.visit_id');
+        $this->db->join('ptn_social_data p', 'p.sd_rekmed = t.visit_rekmed');
+        $this->db->join('trx_recipe tr', 'tr.mdc_id = t.visit_id');
+        $this->db->where_in('visit_status', array('2', '3', '4'));
+        $data['resep_pasien'] = $this->db->get('trx_visit t')->result_array();
+
+        //kembalikan key terakhir dari array resep pasien
+        $last_key = count($data['resep_pasien']) - 1;
+
+        //menggabungkan data layanan lain dengan rawat inap
+        $this->db
+                ->select('t.visit_rekmed as sd_rekmed,t.visit_type,he.datetime as visit_out,p.sd_name,p.sd_address,tr.recipe_id')
+                ->join('ptn_social_data p', 'p.sd_rekmed = t.visit_rekmed')
+                ->join('hos_examination he', 'he.visit_id = t.visit_id')
+                ->join('trx_recipe tr', 'tr.mdc_id = he.examination_id')
+                ->join('hos_prescription hp', 'hp.prescription_id = tr.recipe_id')
+                ->where('hp.status', 0)
+                ->where('t.visit_type', 'ranap');
+        $query = $this->db->get('trx_visit t')->result_array();
+        for ($i = 0; $i < count($query); $i++) {
+            $data['resep_pasien'][$last_key + $i + 1] = $query[$i];
+        }
+
+        $data['cf'] = $this->cf;
+        $this->load->view('template', $data);
+    }
+
+    function select($recipe_id) {
+        $mdc_id = $this->db->get_where('trx_recipe', array('recipe_id' => $recipe_id))->row()->mdc_id;
+        if (strlen($mdc_id) == 11) {
+            $visit_type = 'ranap';
+        } else {
+            $visit_type = 'rajal';
+        }
+
+        $data['main_view'] = 'apotek/resep_pasien/detail_resep';
+        if ($visit_type == 'rajal') {
+            $this->db->select('t.visit_id,t.visit_type,t.visit_out,t.visit_status,'
+                    . 'tpn.ptn_medical_weight,tpn.ptn_medical_height,tpn.ptn_medical_blod_sy,tpn.ptn_medical_blod_ds,'
+                    . 'p.sd_rekmed,p.sd_name,p.sd_sex,p.sd_age,p.sd_blood_tp,p.sd_address,tr.recipe_id');
+            $this->db->join('trx_recipe tr', 'tr.mdc_id = t.visit_id');
+            $this->db->join('trx_medical_ptn_now tpn', 'tpn.mdc_id = t.visit_id');
+            $this->db->join('ptn_social_data p', 'p.sd_rekmed = t.visit_rekmed');
+            $this->db->where('recipe_id', $recipe_id);
+            $data['data_pasien'] = $this->db->get('trx_visit t')->row();
+        } else {
+            $this->db->select('he.visit_id,t.visit_type,he.datetime as visit_out,t.visit_status,he.examination_id,'
+                    . 'tpn.ptn_medical_weight,tpn.ptn_medical_height,tpn.ptn_medical_blod_sy,tpn.ptn_medical_blod_ds,'
+                    . 'p.sd_rekmed,p.sd_name,p.sd_sex,p.sd_age,p.sd_blood_tp,p.sd_address,tr.recipe_id');
+            $this->db->join('hos_examination he', 'he.visit_id = t.visit_id');
+            $this->db->join('trx_recipe tr', 'tr.mdc_id = he.examination_id');
+            $this->db->join('trx_medical_ptn_now tpn', 'tpn.mdc_id = he.examination_id');
+            $this->db->join('ptn_social_data p', 'p.sd_rekmed = t.visit_rekmed');
+            $this->db->where('recipe_id', $recipe_id);
+            $data['data_pasien'] = $this->db->get('trx_visit t')->row();
+        }
+
+        $status_bayar_resep = $this->db->get_where('trx_visit_bill', array('visit_id' => $mdc_id, 'service_id' => 5, 'payment_status' => 1));
+        if ($status_bayar_resep->num_rows() >= 1)
+            $data['status_bayar_resep'] = 1;
+        else
+            $data['status_bayar_resep'] = 0;
+
+        $this->db->select('SUM(iis.istok_qty) as istok_qty,im.*');
+        $this->db->join('inv_item_stok iis', 'im.im_id = iis.istok_item', 'left');
+        // $this->db->where('istok_qty >','0');
+        $this->db->group_by('im.im_id');
+        $data['medicine'] = $this->db->get('inv_item_master im');
+
+        $data['racikan_fee'] = $this->db->get('mst_racikan_fee');
+
+        $data['recipe_id'] = $recipe_id;
+        $data['mdc_id'] = $mdc_id;
+        $data['title'] = 'Resep Pasien';
+        $data['cf'] = $this->cf;
+        $this->load->view('template', $data);
+    }
+
+    function getMedicine() {
+        $this->db->select('SUM(iis.istok_qty) as istok_qty,im.im_name,im.im_id');
+        $this->db->join('inv_item_stok iis', 'im.im_id = iis.istok_item', 'left');
+        // $this->db->where('istok_qty >','0');
+        $this->db->group_by('im.im_id');
+        $data['medicine'] = $this->db->get('inv_item_master im')->result();
+        echo json_encode($data['medicine']);
+    }
+
+    function loaddata($recipe_id) {
+        $this->db->select('tr.mdc_id,tr.recipe_id,tr.recipe_paramedic_price,trd.recipe_medicine,trd.recipe_rule,trd.recipe_qty,trd.recipe_note,im.im_unit,im.im_name,im.im_item_price,mti.mtype_name');
+        $this->db->join('trx_recipe_detail trd', 'tr.recipe_id = trd.recipe_id');
+        $this->db->join('inv_item_master im', 'im.im_id = trd.recipe_medicine');
+        $this->db->join('mst_type_inv mti', 'im.im_unit = mti.mtype_id', 'left');
+        $this->db->where(array('tr.recipe_id' => $recipe_id));
+        $data['resep_pasien'] = $this->db->get('trx_recipe tr');
+
+        $mdc_id = $this->db->get_where('trx_recipe', array('recipe_id' => $recipe_id))->row()->mdc_id;
+
+        $status_bayar_resep = $this->db->get_where('trx_visit_bill', array('visit_id' => $mdc_id, 'service_id' => 5, 'payment_status' => 1));
+        if ($status_bayar_resep->num_rows() >= 1)
+            $data['status_bayar_resep'] = 1;
+        else
+            $data['status_bayar_resep'] = 0;
+
+        $data['mdc_id'] = $mdc_id;
+        $data['recipe_id'] = $recipe_id;
+
+        $this->load->view('apotek/resep_pasien/data', $data);
+    }
+
+    function update($mdc_id, $recipe_medicine) {
+        $data = $this->input->post('ds');
+        $new_recipe_medicine = $data['recipe_medicine'];
+        $recipe_medicine_name = $data['recipe_medicine_name'];
+        $inv_item_master = $this->db->get_where('inv_item_master', array('im_id' => $new_recipe_medicine));
+        if ($inv_item_master->num_rows() <= 0) {
+            $dtMedicine['im_id'] = $new_recipe_medicine;
+            $dtMedicine['im_name'] = $recipe_medicine_name;
+            $dtMedicine['im_unit'] = '';
+            $dtMedicine['im_item_price'] = '0';
+            $dtMedicine['im_item_price_buy'] = '0';
+            $dtMedicine['im_item_price_package'] = '0';
+            $dtMedicine['im_status'] = '1';
+            $this->db->insert('inv_item_master', $dtMedicine);
+            $data['recipe_medicine'] = $this->db->insert_id();
+        }
+        unset($data['recipe_medicine_name']);
+        $this->db->where(array('mdc_id' => $mdc_id, 'recipe_medicine' => $recipe_medicine));
+        $this->db->update('trx_recipe_detail', $data);
+    }
+
+    function delete_list($mdc_id, $recipe_medicine) {
+        $this->db->where(array('mdc_id' => $mdc_id, 'recipe_medicine' => $recipe_medicine));
+        $this->db->delete('trx_recipe_detail');
+    }
+
+    function insert() {
+        $data = $this->input->post('ds');
+        $recipe_medicine = $data['recipe_medicine'];
+        $recipe_medicine_name = $data['recipe_medicine_name'];
+        $inv_item_master = $this->db->get_where('inv_item_master', array('im_id' => $recipe_medicine));
+        if ($inv_item_master->num_rows() <= 0) {
+            $dtMedicine['im_id'] = $recipe_medicine;
+            $dtMedicine['im_name'] = $recipe_medicine_name;
+            $dtMedicine['im_unit'] = '';
+            $dtMedicine['im_item_price'] = '0';
+            $dtMedicine['im_item_price_buy'] = '0';
+            $dtMedicine['im_item_price_package'] = '0';
+            $dtMedicine['im_status'] = '1';
+            $this->db->insert('inv_item_master', $dtMedicine);
+            $data['recipe_medicine'] = $this->db->insert_id();
+        }
+        $medicineExist = $this->db->get_where('trx_recipe_detail', array('recipe_id' => $data['recipe_id'], 'recipe_medicine' => $data['recipe_medicine']));
+        if ($medicineExist->num_rows() <= 0) {
+            unset($data['recipe_medicine_name']);
+            $this->db->insert('trx_recipe_detail', $data);
+        }
+    }
+
+    function kirim_kasir($recipe_id) {
+        $mdc_id = $this->db->get_where('trx_recipe', array('recipe_id' => $recipe_id))->row()->mdc_id;
+        if (!empty($mdc_id)) {
+            $this->db->where_in('service_id', array(5, 10));
+            $trx_visit_bill_status = $this->db->get_where('trx_visit_bill', array('visit_id' => $mdc_id));
+            if ($trx_visit_bill_status->num_rows() >= 1) {
+                $this->db->where(array('visit_id' => $mdc_id));
+                $this->db->where_in('service_id', array(5, 10));
+                $this->db->delete('trx_visit_bill');
+            }
+            $this->db->select('tr.mdc_id,tr.recipe_id,trd.recipe_medicine,trd.recipe_note,trd.recipe_rule,trd.recipe_qty,im.im_unit,im.im_name,im.im_item_price,mti.mtype_name');
+            $this->db->where('tr.mdc_id', $mdc_id);
+            $this->db->join('trx_recipe_detail trd', 'trd.recipe_id = tr.recipe_id');
+            $this->db->join('inv_item_master im', 'trd.recipe_medicine = im.im_id');
+            $this->db->join('mst_type_inv mti', 'im.im_unit = mti.mtype_id', 'left');
+            $resep = $this->db->get('trx_recipe tr');
+
+            $tuslaResep = $this->db->get_where('mst_adm_fee', array('adm_id' => 10))->row();
+            $totalTuslaResep = 0;
+
+            if ($resep->num_rows() >= 1) {
+                $dt = array();
+                foreach ($resep->result() as $key => $value) {
+                    $dt[] = array(
+                        'visit_id' => substr($mdc_id,0,8),
+                        'service_id' => 5,
+                        'service_name' => $value->im_name . " " . $value->recipe_rule . " " . $value->recipe_qty . " " . $value->mtype_name,
+                        'price' => $value->im_item_price * $value->recipe_qty,
+                        'paramedic_price' => 0,
+                        'other_price' => 0,
+                        'total_price' => $value->im_item_price * $value->recipe_qty,
+                        'cashier_id' => '',
+                        'payment_status' => 0,
+                    );
+                    $totalTuslaResep += $tuslaResep->adm_fee;
+                }
+                if (!empty($dt)) {
+                    $this->db->insert_batch('trx_visit_bill', $dt);
+                }
+            }
+            $this->db->join('mst_racikan_fee mrf', 'mrf.id = trx_racikan.racikan_tuslah_type', 'left');
+            $racikan = $this->db->get_where('trx_racikan', array('mdc_id' => $mdc_id));
+            $totalTuslaRacikan = 0;
+            if ($racikan->num_rows() >= 1) {
+                $dt = array();
+                foreach ($racikan->result() as $key => $value) {
+                    $dt[] = array(
+                        'visit_id' => substr($mdc_id,0,8),
+                        'service_id' => 5,
+                        'service_name' => $value->racikan_name . " " . $value->racikan_rule,
+                        'price' => $value->racikan_total,
+                        'paramedic_price' => 0,
+                        'other_price' => 0,
+                        'total_price' => $value->racikan_total,
+                        'cashier_id' => '',
+                        'payment_status' => 0,
+                    );
+                    $totalTuslaResep += $tuslaResep->adm_fee;
+                    $totalTuslaRacikan += $value->fee;
+                }
+                if (!empty($dt)) {
+                    $this->db->insert_batch('trx_visit_bill', $dt);
+                }
+            }
+            $totalTusla = $totalTuslaRacikan + $totalTuslaResep;
+            if ($totalTusla > 0) {
+                $dt = array(
+                    'visit_id' => $mdc_id,
+                    'service_id' => 10,
+                    'service_name' => 'Biaya Administrasi Resep',
+                    'price' => $totalTusla,
+                    'paramedic_price' => 0,
+                    'other_price' => 0,
+                    'total_price' => $totalTusla,
+                    'cashier_id' => '',
+                    'payment_status' => 0,
+                );
+                $this->db->insert('trx_visit_bill', $dt);
+            }
+            $this->db->where('visit_id', $mdc_id);
+            $this->db->update('trx_visit', array('visit_status' => 3));
+        }
+    }
+
+    function simpan($recipe_id) {
+        $data = $this->input->post('ds');
+        $visit_id = $data['visit_id'];
+
+        if (strlen($visit_id) == 11) {
+            $visit_type = 'ranap';
+        } else {
+            $visit_type = 'rajal';
+        }
+
+        if ($visit_type == 'ranap') {
+            $this->kirim_kasir($recipe_id);
+        }
+
+        //detail
+        $this->db->where(array('mdc_id' => $visit_id, 'recipe_id' => $recipe_id));
+        $detail = $this->db->get('trx_recipe_detail');
+        if ($detail->num_rows() >= 1) {
+            foreach ($detail->result() as $key => $value) {
+                $this->updateStok($value->recipe_medicine, $value->recipe_qty);
+            }
+        }
+        $this->db->join('trx_racikan_detail trd', 'trd.racikan_id = tr.racikan_id');
+        $this->db->where('tr.mdc_id', $visit_id);
+        $detailRacikan = $this->db->get('trx_racikan tr');
+        if ($detailRacikan->num_rows() >= 1) {
+            foreach ($detailRacikan->result() as $key => $value) {
+                $this->updateStok($value->racikan_medicine, $value->racikan_medicine_qty);
+            }
+        }
+
+        if ($visit_type == 'ranap') {
+            $this->db->where('prescription_id', $recipe_id);
+            $this->db->update('hos_prescription', array('status' => 1));
+        }else{
+            $dt_stat['visit_status'] = 5;
+            $this->db->where('visit_id', $visit_id);
+            $this->db->update('trx_visit', $dt_stat);
+        }
+    }
+
+    public function updateStok($istok_item, $returQty) {
+        $this->db->where('istok_qty >', '0');
+        $this->db->where('istok_item', $istok_item);
+        $this->db->order_by('istok_exp', 'asc');
+        $stok = $this->db->get('inv_item_stok');
+        if ($stok->num_rows() >= 1) {
+            $stok = $stok->row();
+            $oldStokId = $stok->istok_id;
+            $oldStok = $stok->istok_qty;
+            if ($returQty > $oldStok) {
+                $returQty = $returQty - $oldStok;
+                $dtUpdateStok['istok_qty'] = 0;
+                $this->db->where('istok_id', $oldStokId);
+                $this->db->update('inv_item_stok', $dtUpdateStok);
+                $this->updateStok($istok_item, $returQty);
+            } else {
+                $newStok = $oldStok - $returQty;
+                $dtUpdateStok['istok_qty'] = $newStok;
+                $this->db->where('istok_id', $oldStokId);
+                $this->db->update('inv_item_stok', $dtUpdateStok);
+            }
+        } else {
+            // jike tidak ada di stok maka insert dengan value stok minus
+            $dtstok = array(
+                'iri_id' => $data['iri_id'],
+                'istok_item' => $istok_item,
+                'istok_qty' => (0 - $returQty),
+                'istok_item_price' => 0,
+                'istok_exp' => '',
+                'istok_batch' => '',
+            );
+            $this->db->insert('inv_item_stok', $dtstok);
+        }
+    }
+
+    function cetak_resep($recipe_id) {
+        $data['main_view'] = 'apotek/resep_pasien/detail_resep';
+
+        $this->db->select('t.visit_id,t.visit_type,t.visit_out,tpn.ptn_medical_weight,tpn.ptn_medical_height,tpn.ptn_medical_blod_sy,tpn.ptn_medical_blod_ds,p.sd_rekmed,p.sd_name,p.sd_sex,p.sd_age,p.sd_blood_tp,p.sd_address,tr.recipe_id,me.sd_name as dr_name');
+        $this->db->join('trx_medical_ptn_now tpn', 'tpn.mdc_id = t.visit_id');
+        $this->db->join('ptn_social_data p', 'p.sd_rekmed = t.visit_rekmed');
+        $this->db->join('trx_recipe tr', 'tr.mdc_id = t.visit_id');
+        $this->db->join('trx_medical tm', 'tm.mdc_id = t.visit_id', 'left');
+        $this->db->join('mst_employer me', 'me.id_employe = tm.dr_id', 'left');
+        $this->db->where('recipe_id', $recipe_id);
+        $data['data_pasien'] = $this->db->get('trx_visit t')->row();
+
+        $this->db->select('tr.mdc_id,tr.recipe_id,tr.recipe_paramedic_price,trd.recipe_medicine,trd.recipe_rule,trd.recipe_qty,trd.recipe_note,im.im_unit,im.im_name,im.im_item_price,mti.mtype_name');
+        $this->db->join('trx_recipe_detail trd', 'tr.recipe_id = trd.recipe_id');
+        $this->db->join('inv_item_master im', 'im.im_id = trd.recipe_medicine');
+        $this->db->join('mst_type_inv mti', 'im.im_unit = mti.mtype_id', 'left');
+        $this->db->where(array('tr.recipe_id' => $recipe_id));
+        $data['resep_pasien'] = $this->db->get('trx_recipe tr');
+
+        $mdc_id = $this->db->get_where('trx_recipe', array('recipe_id' => $recipe_id))->row()->mdc_id;
+        $mdc_id = (isset($mdc_id)) ? $mdc_id : '0';
+
+        $this->db->where('mdc_id', $mdc_id);
+        $data['racikan'] = $this->db->get('trx_racikan tr');
+
+        $status_bayar_resep = $this->db->get_where('trx_visit_bill', array('visit_id' => $mdc_id, 'service_id' => 5, 'payment_status' => 1));
+        if ($status_bayar_resep->num_rows() >= 1)
+            $data['status_bayar_resep'] = 1;
+        else
+            $data['status_bayar_resep'] = 0;
+
+        $data['recipe_id'] = $recipe_id;
+        $data['mdc_id'] = $mdc_id;
+        $data['title'] = 'Resep Pasien';
+        $data['cf'] = $this->cf;
+
+        $this->load->view('apotek/resep_pasien/cetak_resep', $data);
+    }
+
+    public function riwayat_resep() {
+        $data['main_view'] = 'resep_pasien/riwayat_resep';
+        $data['title'] = 'Riwayat Resep Pasien';
+
+        $this->db->select('t.visit_id,t.visit_type,t.visit_out,tpn.ptn_medical_weight,tpn.ptn_medical_height,tpn.ptn_medical_blod_sy,tpn.ptn_medical_blod_ds,p.sd_rekmed,p.sd_name,p.sd_sex,p.sd_age,p.sd_blood_tp,p.sd_address,tr.recipe_id');
+        $this->db->join('trx_medical_ptn_now tpn', 'tpn.mdc_id = t.visit_id');
+        $this->db->join('ptn_social_data p', 'p.sd_rekmed = t.visit_rekmed');
+        $this->db->join('trx_recipe tr', 'tr.mdc_id = t.visit_id');
+        $this->db->where_in('visit_status', array('3', '4', '5'));
+        $data['resep_pasien'] = $this->db->get('trx_visit t');
+
+        $data['cf'] = $this->cf;
+        $this->load->view('template', $data);
+    }
+
+// RACIKAN
+    function insertRacikan() {
+        $data = $this->input->post('ds');
+        // $tuslaRacikan = $this->db->get_where('mst_racikan_fee',array('id'=>$data['racikan_tuslah_type']))->row();
+        // $data['racikan_total']	= $tuslaRacikan->fee;
+        $data['racikan_id'] = $this->gen_id_racikan();
+        $this->db->insert('trx_racikan', $data);
+    }
+
+    function loaddataRacikan($mdc_id) {
+
+        $this->db->join('mst_racikan_fee mrf', 'mrf.id = tr.racikan_tuslah_type', 'left');
+        $this->db->where('mdc_id', $mdc_id);
+        $data['racikan'] = $this->db->get('trx_racikan tr');
+
+        if ($data['racikan']->num_rows() >= 1) {
+            foreach ($data['racikan']->result() as $key => $value) {
+                $this->db->join('inv_item_master im', 'im.im_id = trx_racikan_detail.racikan_medicine');
+                $this->db->join('mst_type_inv mti', 'im.im_unit = mti.mtype_id', 'left');
+                $detail = $this->db->get_where('trx_racikan_detail', array('racikan_id' => $value->racikan_id));
+                if ($detail->num_rows() >= 1) {
+                    $data['detail'][$value->racikan_id] = $detail->result();
+                }
+            }
+        }
+
+        $status_bayar_resep = $this->db->get_where('trx_visit_bill', array('visit_id' => $mdc_id, 'service_id' => 5, 'payment_status' => 1));
+        if ($status_bayar_resep->num_rows() >= 1)
+            $data['status_bayar_resep'] = 1;
+        else
+            $data['status_bayar_resep'] = 0;
+
+        $this->load->view('apotek/resep_pasien/data_racikan', $data);
+    }
+
+    function gen_id_racikan() {
+        $kd = $this->db->get_where('com_code', array('title' => 'format_racikan'));
+        if ($kd->num_rows() == 1) {
+            $kode = db_conv($kd);
+        } else {
+            $kode = new stdClass();
+            $kode->value_1 = 'RC-'; // Racikan
+        }
+        $format = $kode->value_1 . DATE('ym');
+        $q = $this->db->query("SELECT substr(racikan_id, 9, 4) as n 
+			  from trx_racikan where racikan_id like '$format%' order by n desc limit 1");
+
+        if ($q->num_rows() == 0) {
+            $no = '0001';
+        } else {
+            $nl = intval(db_conv($q)->n);
+            $nl++;
+            $no = rtrim(sprintf("%'04s\n", $nl));
+        }
+        return $format . $no;
+    }
+
+    function updateRacikan($mdc_id, $racikan_id) {
+        $data = $this->input->post('ds');
+        $tuslaRacikan = $this->db->get_where('mst_racikan_fee', array('id' => $data['racikan_tuslah_type']))->row();
+        $data['racikan_total'] = $tuslaRacikan->fee;
+        $this->db->where(array('mdc_id' => $mdc_id, 'racikan_id' => $racikan_id));
+        $this->db->update('trx_racikan', $data);
+    }
+
+    function delete_list_racikan($mdc_id, $racikan_id) {
+        $this->db->where(array('mdc_id' => $mdc_id, 'racikan_id' => $racikan_id));
+        $this->db->delete('trx_racikan');
+
+        $this->db->where('racikan_id', $racikan_id);
+        $this->db->delete('trx_racikan_detail');
+    }
+
+    function insertRacikanDetail() {
+        $data = $this->input->post('ds');
+        $racikan_medicine = $data['racikan_medicine'];
+        $racikan_medicine_name = $data['racikan_medicine_name'];
+        $inv_item_master = $this->db->get_where('inv_item_master', array('im_id' => $racikan_medicine));
+        if ($inv_item_master->num_rows() <= 0) {
+            $dtMedicine['im_id'] = $racikan_medicine;
+            $dtMedicine['im_name'] = $racikan_medicine_name;
+            $dtMedicine['im_unit'] = '';
+            $dtMedicine['im_item_price'] = '0';
+            $dtMedicine['im_item_price_buy'] = '0';
+            $dtMedicine['im_item_price_package'] = '0';
+            $dtMedicine['im_status'] = '1';
+            $this->db->insert('inv_item_master', $dtMedicine);
+            $data['racikan_medicine'] = $this->db->insert_id();
+        }
+        $exist = $this->db->get_where('trx_racikan_detail', array('racikan_id' => $data['racikan_id'], 'racikan_medicine' => $data['racikan_medicine']));
+        if ($exist->num_rows() == 0) {
+            unset($data['racikan_medicine_name']);
+            $this->db->insert('trx_racikan_detail', $data);
+            $inv_item_master = $this->db->get_where('inv_item_master', array('im_id' => $data['racikan_medicine']))->row();
+            $this->updateTotalRacikan($data['racikan_id'], $inv_item_master->im_item_price, $data['racikan_medicine_qty'], 'add');
+        }
+    }
+
+    function deleteListRacikanDetail($racikan_id, $racikan_medicine, $qty) {
+        $this->db->where(array('racikan_id' => $racikan_id, 'racikan_medicine' => $racikan_medicine));
+        $this->db->delete('trx_racikan_detail');
+
+        $inv_item_master = $this->db->get_where('inv_item_master', array('im_id' => $racikan_medicine))->row();
+        $this->updateTotalRacikan($racikan_id, $inv_item_master->im_item_price, $qty, 'delete');
+    }
+
+    function updateTotalRacikan($racikan_id, $im_item_price, $qty, $act = 'add') {
+        $racikan = $this->db->get_where('trx_racikan', array('racikan_id' => $racikan_id))->row();
+        if ($act == 'delete')
+            $total = $racikan->racikan_total - ($im_item_price * $qty);
+        else
+            $total = $racikan->racikan_total + ($im_item_price * $qty);
+        $data['racikan_total'] = $total;
+        $this->db->where('racikan_id', $racikan_id);
+        $this->db->update('trx_racikan', $data);
+    }
+
+// END RACIKAN
+}
+
+// end class

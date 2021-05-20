@@ -1,0 +1,569 @@
+<link rel="stylesheet" href="<?=base_url()?>assets/css/jquery.gritter.css" />
+<link rel="stylesheet" href="<?= base_url() ?>assets/css/chosen.css" />
+<script src="<?= base_url() ?>assets/js/jquery.chosen.js"></script>
+<style type="text/css" media="screen">
+    #fx_supplier_ctr.ffb{
+        width:320px !important;
+        top: 28px !important;
+    }
+    #fx_supplier_ctr .row .col1{
+        float:left;
+        /*width:50px;*/
+    }
+    #fx_supplier_ctr .row .col2{
+        float:left;
+        margin-left: 15px;
+        width:100px;x`
+    }
+     #fx_supplier_ctr .row .col3{
+        float:left;
+        margin-left: 15px;
+        /*width:150px;*/
+    }
+    #fx_ipo_id_ctr.ffb{
+        width:320px !important;
+        top: 28px !important;
+    }
+    #fx_ipo_id_ctr .row .col1{
+        float:left;
+        /*width:50px;*/
+    }
+    #fx_ipo_id_ctr .row .col2{
+        float:left;
+        margin-left: 15px;
+        width:100px;
+    }
+     #fx_ipo_id_ctr .row .col3{
+        float:left;
+        margin-left: 15px;
+        /*width:150px;*/
+    }
+    #fx_item.ffb{
+        width:320px !important;
+        top: 28px !important;
+    }
+    #fx_item_ctr .row .col1{
+        float:left;
+        width:10px;
+    }
+    #fx_item_ctr .row .col2{
+        float:left;
+        margin-left: 15px;
+        width:220px;
+    }
+    .ffb-input{
+        width: 250px !important;
+    }
+    .frm_search input{margin-top:-1px;float:right;margin-left:2px}
+    .frm_search .btn{float:right;margin-left:5px}
+    .frm_search .btn span{padding:2px 10px;}
+    .search_choice a{font-weight:bold}
+    .search_choice a.active{color:#fb9338}
+    .search_choice {float:right;margin-right:95px}
+    #advance{display:none}
+    #filter{border-bottom: 1px dashed #DDD;}
+    #body_search{margin-top:10px}
+    .tname{font-size:110%}
+    #dyntable tbody tr td{border-right:none}
+    #dyntable tbody tr td + td + td {border-right:1px solid #DDD}
+    #dyntable tr:nth-child(even){
+        background:#F7F7F7;
+    }
+    .dataTables_scrollHead{
+        margin-bottom: -22px;
+    }
+    .dataTables_info{
+        margin-top: 20px;
+    }
+    .table_tr thead th{
+        height: 28px;
+        vertical-align: middle;
+        font-size: 13px;
+    }
+    .table_tr tbody th{
+        height: 28px;
+        vertical-align: middle;
+        font-size: 13px;
+    }
+    .alert{
+        background-color: transparent;
+        border: 0px;
+    }
+
+    #gritter-notice-wrapper{
+        right: 13%;
+        top: 100px;
+    }
+</style>
+<script type="text/javascript">
+    $(function(){
+        $('.chosen-select').chosen({no_results_text: "data tidak ditemukan!"});
+        $('.datepicker').datepicker({
+            minDate: '0',
+        });
+
+        var d_uri = "<?=base_url()?>gudang_farmasi/purchase_order/data_order";
+        oTb = $('#tb_dokter').dataTable( {
+            "bProcessing": true,
+            "bServerSide": true,
+            "bLengthChange": false,     
+            "bFilter": true,
+            "sPaginationType": "full_numbers",
+            "aoColumns": [null,null,null,null,{ "bSortable": false }],
+            "sAjaxSource": d_uri,
+            "fnServerData": function ( sSource, aoData, fnCallback ) {
+                var newArray = $.merge(aoData, [{ "name": "<?=$this->security->get_csrf_token_name()?>", "value": "<?=$this->security->get_csrf_hash()?>" }]);
+                $.ajax( {
+                    "dataType": 'json',
+                    "type": "POST", 
+                    "url": sSource, 
+                    "data": aoData, 
+                    "success": fnCallback
+                } );
+            }
+        });
+        $("#tb_dokter_filter").hide();  
+        $(".chatsearch input").keyup(function(e){
+            $("#tb_dokter_filter input").val($(".chatsearch input").val()).trigger('keyup');
+        })
+
+        $('#fx_supplier').flexbox(BASE+"gudang/purchase_order/get_supplier", {
+            //method : 'POST',
+            paging: false,
+            showArrow: false ,
+            maxVisibleRows : 10,
+            width : 185,
+            resultTemplate: '<div class="col1">{id}</div><div class="col2">{name}</div><div class="col3">{address}</div>',
+            /*onSelect:function(){
+                callback();
+            }*/
+        });
+
+        $('#fx_ipo_id').flexbox(BASE+"gudang/receive_item/get_purchase_order", {
+            //method : 'POST',
+            paging: false,
+            showArrow: false ,
+            maxVisibleRows : 10,
+            width : 185,
+            resultTemplate: '<div class="col1">{id}</div>',
+            onSelect:function(){
+                $.getJSON(BASE+"gudang/receive_item/get_detail_purchase_order/"+$("#fx_ipo_id_hidden").val(), function(json) {
+                    $("#fx_supplier_input").attr('disabled','disabled');
+                    $("#fx_supplier_hidden").val(json.ipo_supplier);
+                    $("#fx_supplier_input").val(json.ipo_supplier_name);
+                    $("#ipo_ppn").val(json.ipo_ppn);
+                    $("#ipo_date_req").val(json.ipo_date_req);
+                    $("#ipo_date_shipping").val(json.ipo_date_shipping);
+                    var tanggal = "<?php echo date('m/d/Y')?>";
+                    $("#iri_date_acept").val(tanggal);
+                    $("#ipo_operator").val(json.ipo_operator);
+                    $("#ipo_note").html(json.ipo_note);
+                    cek_po_id();
+                })
+            }
+        });
+
+        $('#fx_item').flexbox(BASE+"gudang/get_item", {
+            //method : 'POST',
+            paging: false,
+            showArrow: false ,
+            maxVisibleRows : 10,
+            width : 180,
+            resultTemplate: '<div class="col1">{id}</div><div class="col2">{name}</div>',
+            onSelect:function(){
+                $("#harga_beli_total_ppn").focus();
+                $.getJSON(BASE+"gudang/get_item_harga/"+$("#fx_item_hidden").val(), function(json) {
+                    $("#unit").html(json.unit);
+                    $("#qty").val(1);
+                })
+            }
+
+        });
+
+        $("#fx_ipo_id_input").change(function(){
+            cek_po_id();
+        })
+
+        function cek_po_id(){
+            if( ($("#fx_ipo_id_hidden").val()).substring(0,3) == 'PO-' && ($("#fx_ipo_id_hidden").val()).length == 11 )
+                $("#next").removeAttr('disabled');
+            else
+                $("#next").attr('disabled','disabled');
+        }
+
+    });
+    </script>
+<div id="his">
+<div class="pageheader notab">
+    <h1 class="pagetitle">Tambah <?=$title?></h1>
+</div>
+
+<div id="field1">
+<div class="container-fluid">
+    <div class="row-fluid">
+        <div class="span12">
+            <div class="widget-box">
+                <div class="widget-title">
+                    <span class="icon">
+                        <i class="icon-align-justify"></i>                                  
+                    </span>
+                    <h5>Langkah 1 : Masukkan Nomor Purchase Order</h5>
+                </div>
+                <div class="widget-content nopadding">
+                    <?=form_open(cur_url(-1).'save_receive_item',array('class' => 'form-horizontal form','id' => 'form_sup')); ?>
+                        <div class="control-group">
+                            <label class="control-label">No Order *</label>
+                            <div class="controls">
+                                <input type="text" style="width:15%" id="iri_id" readonly="readonly" name="ds[iri_id]" value="<?php echo $ipo_id;?>" >
+                            </div>
+                            <label class="control-label">Nomor Purchase Order *</label>
+                            <div class="controls">
+                                <div id="fx_ipo_id" name="fx_ipo_id"></div>
+                            </div>
+                            <label class="control-label">Supplier *</label>
+                            <div class="controls">
+                                <div id="fx_supplier" name="fx_supplier"></div>
+                            </div>
+                            <label class="control-label">Tanggal Order *</label>
+                            <div class="controls">
+                                <input type="text" class="mini datepicker" name="ipo_date_req" id="ipo_date_req" data-date-format="dd-mm-yyyy" disabled>
+                            </div>
+                            <label class="control-label">Mata Uang *</label>
+                            <div class="controls">
+                                <select id="ipo_currency" name="ds[ipo_currency]" style="width:140px" disabled>
+                                    <?php foreach ($currency->result() as $c): ?>
+                                        <option name="ipo_currency" value=""><?php echo $c->mc_id;?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <label class="control-label">Vat Status *</label>
+                            <div class="controls">
+                                <select id="ipo_vat" name="ds[ipo_vat]" style="width:140px" disabled>
+                                    <option value="" >Choose One</option>
+                                    <option value="no vat">No VAT</option>
+                                    <option value="include">Include</option>
+                                    <option value="exclude">Exclude</option>
+                                </select>
+                            </div>
+                            <label class="control-label">PPN *</label>
+                            <div class="controls">
+                                <input type="text" placeholder="PPn" class="input input-mini" id="ipo_ppn" value="10" name="ds[ipo_ppn]" disabled> %
+                            </div>
+                            <!-- <label class="control-label">Alamat Pengiriman *</label>
+                            <div class="controls">
+                                <textarea  class="medium" style="width:40%" id="ipo_address" name="ds[ipo_address]" disabled></textarea>
+                            </div> -->
+                            <label class="control-label">Petugas *</label>
+                            <div class="controls">
+                                <input type="text" placeholder="Petugas" class="mini" id="ipo_operator" value="<?=get_user('sd_name')?>" name="ds[ipo_operator]" disabled>
+                            </div>
+                            <label class="control-label">Catatan</label>
+                            <div class="controls">
+                                <textarea  class="medium" style="width:40%" id="ipo_note" name="ds[ipo_note]" disabled></textarea>
+                            </div>
+                            <label class="control-label">Tanggal Penerimaan *</label>
+                            <div class="controls">
+                                <input type="text" class="mini datepicker" name="iri_date_acept" id="iri_date_acept" data-date-format="dd-mm-yyyy" disabled>
+                            </div>
+                            <label class="control-label">Petugas Penerima *</label>
+                            <div class="controls">
+                                <input type="text" placeholder="Petugas Penerima" class="mini" id="iri_operator" value="<?=get_user('user_name')?>" name="ds[iri_operator]" readonly>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <!-- <button id="back" class="hide">Kembali</button> -->
+                            <button id="next" class="btn btn-primary pull-right" disabled="disabled">Lanjut</button>
+                            <button  style="margin-right:10px;" id="reset" class="btn btn-default pull-right" type="reset">Reset</button>
+                        </div>
+                    </form>
+                </div>
+            </div>                      
+        </div>
+    </div>
+</div>
+</div>
+</div>
+
+<div id="field2" class="hide">
+<div class="container-fluid">
+    <div class="row-fluid">
+        <div class="span12">
+            <div class="widget-box">
+                <div class="widget-title">
+                    <span class="icon">
+                        <i class="icon-align-justify"></i>                                  
+                    </span>
+                    <h5 style="width:94%"><span>Langkah 2 : Masukkan Detail Inventori</span></h5>
+                </div>
+                    <?=form_open(cur_url(-1).'save_receive_item',array('class' => 'form-horizontal form','id'=>'form_det')); ?>
+                        <div class="frm_trx" style="width:96%;padding:10px;height:195px;margin:0 auto;margin-top:20px;margin-bottom:20px;border:1px dashed #969696;color:#AAA">
+                            <div class="control-group" style="width:50%;float:left;border-bottom:none;">
+                                <label class="control-label" style="width:160px;">Item *</label>
+                                <div class="controls" style="margin-left:170px;">
+                                    <div name="fx_item" id="fx_item"></div>
+                                </div>
+                                <label class="control-label" style="width:160px;">Harga Beli (Total) + PPN *</label>
+                                <div class="controls" style="margin-left:170px;">
+                                    <input type="text" class="input-small" id="harga_beli_total_ppn" autocomplete="off">
+                                </div>
+                                <label class="control-label" style="width:160px;">Jumlah *</label>
+                                <div class="controls" style="margin-left:170px;">
+                                    <input type="text" name="" class="input-small" id="qty" autocomplete="off"><b id="unit"></b>
+                                </div>
+                                <!-- <label class="control-label" style="width:160px;">Harga Beli (Satuan) *</label>
+                                <div class="controls" style="margin-left:170px;">
+                                    <input type="text" id="harga_beli_satuan" class="input-small" autocomplete="off" readonly="true">
+                                </div> -->
+                                <label class="control-label" style="width:160px;">Harga Beli (Satuan) + PPN *</label>
+                                <div class="controls" style="margin-left:170px;">
+                                    <input type="text" id="harga_beli_satuan_ppn" class="input-small" autocomplete="off" readonly="true">
+                                </div>
+                                <!-- </div> -->
+                            </div>
+                            <div class="control-group" style="width:50%;float:right;">
+                                <!-- <label class="control-label" style="width:130px;">Expired Date *</label>
+                                <div class="controls" style="margin-left:140px;">
+                                    <input type="text" name="" class="input-small datepicker" id="exp" autocomplete="off" placeholder="Expired Date" data-date-format="dd-mm-yyyy">
+                                </div>
+                                <br clear="all"> -->
+                                <label class="control-label" style="width:130px;">Batch *</label>
+                                <div class="controls" style="margin-left:140px;">
+                                    <input type="text" name="" class="input-small" id="batch" autocomplete="off"><b id="unit"></b>
+                                </div>
+                                <label class="control-label" style="width:130px;">Expired Date *</label>
+                                <div class="controls" style="margin-left:140px;">
+                                    <select  name="tgl[0]" style="min-width:90px;width:90px" style="float:left" id="tgl" class="chosen-select">
+                                        <option value="" >-- tgl --</option>
+                                        <?= get_hari() ?>
+                                    </select>
+                                    <select name="tgl[1]" style="width:90px" id="bln" class="chosen-select">
+                                        <option value="">-- bln --</option>
+                                        <?= get_bulan() ?>
+                                    </select>
+                                    <br>
+                                    <select name="tgl[2]" style="width:90px" id="thn" class="chosen-select">
+                                        <option value="">-- thn --</option>
+                                        <?= get_tahun_next() ?>
+                                    </select>
+                                    <label for="tgl" generated="true" class="error"></label>
+                                </div>
+                                <br clear="all">
+                                <!-- <div class="section"> -->
+                                <label class="control-label" style="width:130px;"></label>
+                                <div class="controls" style="margin-left:140px;">
+                                    <a class="btn btn-warning" id="tambah">tambah</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="widget-box" style="margin:10px;">
+                            <div class="widget-content" style="border:0">
+                                <table class="table table-bordered table-striped table_tr" id="tbTambah">
+                                    <thead>
+                                        <tr>
+                                            <th>Kode</th>
+                                            <th>Nama Obat</th>
+                                            <th>Jumlah</th>
+                                            <th>Expired Date</th>
+                                            <th>Harga Beli (Satuan)</th>
+                                            <th>Total</th>
+                                            <th style="width:75px">Aksi</th>
+                                        </tr>
+                                        <tr class="default">
+                                            <td colspan="7" style="text-align:center;">Detaill item kosong</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    </tbody>
+                                </table> 
+                            </br>
+                                <table class="table">
+                                    <tbody>
+                                        <!-- <tr>
+                                            <td style="width:70%"></td>
+                                            <td style="width:10%">Sub Total</td>
+                                            <td><input type="text" readonly="readonly" id="tot" name="tot" autocomplete="off"></td>
+                                        </tr>
+                                        <tr>
+                                            <td>&nbsp;</td>
+                                            <td>PPn</td>
+                                            <td><input type="text" readonly="readonly" id="ppn" name="ppn" autocomplete="off"></td>
+                                        </tr> -->
+                                        <tr>
+                                            <td style="width:70%;border-top:none;">&nbsp;</td>
+                                            <td style="width:20%;border-top:none;">Total (+ PPN 10%)</td>
+                                            <td style="border-top:none;">
+                                                <span id="totalText" style="font-weight:bold;text-align:right;"></span>
+                                                <input type="hidden" readonly="readonly" id="total" name="total" autocomplete="off" class="input-small">
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="width:70%;border-top:none;">&nbsp;</td>
+                                            <td style="width:20%;border-top:none;">Diskon</td>
+                                            <td style="border-top:none;">
+                                                <input type="text" id="discount" name="discount" autocomplete="off" class="input-small">
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="width:70%;border-top:none;">&nbsp;</td>
+                                            <td style="width:20%;border-top:none;">Total </td>
+                                            <td style="border-top:none;">
+                                                <span id="grandText" style="font-weight:bold;text-align:right;"></span>
+                                                <input type="hidden" readonly="readonly" id="grand" name="grand" autocomplete="off" class="input-small">
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>                            
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary pull-right">Simpan</button>
+                            <button style="margin-right:10px;" id="" class="btn pull-right back" type="">Kembali</button>
+                        </div>
+                    </form>
+            </div>                      
+        </div>
+    </div>
+</div>
+</div>
+
+<div id="gritter-notice-wrapper" class="alert hide" style="width:750px;position:fixed">
+    <div id="gritter-item-1" class="gritter-item-wrapper" style="margin:0 -17px 5px 0">
+        <div class="gritter-top"></div>
+        <div class="gritter-item">
+            <div class="gritter-close" style="display: none; width:50px "></div>
+            <img src="<?=base_url()?>assets/img/demo/envelope.png" class="gritter-image">
+            <div class="gritter-with-image" style="width:448px">
+                <span class="gritter-title" style="margin-left:36px">Message</span>
+                <p>Data Berhasil Disimpan   </p>
+            </div>
+            <div style="clear:both"></div>
+        </div>
+        <div class="gritter-bottom"></div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(function(){
+        var count = 0;
+        $("#discount").val(0);
+        $("#grandText").html(0);
+        $("#grand").val(0);
+        $("#totalText").html(0);
+        $("#total").val(0);
+        $("#next").click(function(){
+            $("#field1").fadeOut(function(){
+                $("#field2").fadeIn();
+                $("#fx_item_input").focus();
+            })
+            return false;
+        })
+        $(".back").click(function(){
+            $("#field2").fadeOut(function(){
+                $("#field1").fadeIn();
+            })
+            return false;
+        }) 
+        $("#back").click(function(){
+            // $("#field2").fadeOut(function(){
+            //     $("#field1").fadeIn();
+            // })
+            // return false;
+            window.history.back(); 
+        })
+        $("#history").click(function(){
+            $("#his").fadeOut(function(){
+                $("#history1").fadeIn();
+            })
+            return false;
+        })
+        $("#add").click(function(){
+            $("#history1").fadeOut(function(){
+                $("#his").fadeIn();
+            })
+            return false;
+        })
+        $(".form").submit(function(){
+            var url  = $(this).attr('action');
+            var data = $("#form_sup").serialize()+"&"+$("#form_det").serialize();
+            $.post(url,data, function(data) {
+                $(".alert").fadeIn().delay(500).fadeOut(function(){
+                    // $("#reset").trigger('click');
+                    $("#back").trigger('click');
+                });     
+            }); 
+            return false;
+        });
+
+        $("#harga_beli_total_ppn").change(function(){
+            var qty = $("#qty").val();
+            var harga_beli_total_ppn    = $(this).val();
+            var harga_beli_satuan_ppn   = parseFloat(harga_beli_total_ppn) / parseFloat(qty);
+            $("#harga_beli_satuan_ppn").val(harga_beli_satuan_ppn);
+        });
+
+        $("#qty").change(function(){
+            var qty = $(this).val();
+            var harga_beli_total_ppn    = $("#harga_beli_total_ppn").val();
+            var harga_beli_satuan_ppn   = parseFloat(harga_beli_total_ppn) / parseFloat(qty);
+            $("#harga_beli_satuan_ppn").val(harga_beli_satuan_ppn);
+        });
+
+        $("#discount").change(function(){
+            var discount    = $(this).val();
+            var total       = $("#total").val();
+            var grandTotal  = total - discount;
+            $("#grand").val(grandTotal);
+            $("#grandText").html(grandTotal);
+        });
+
+        $("#tambah").click(function(){
+            count += 1;
+                var nama    = $("#fx_item_input").val();
+                var item    = $("#fx_item_hidden").val();
+                var harga_beli_satuan_ppn   = $("#harga_beli_satuan_ppn").val();
+                var harga_beli_total_ppn   = $("#harga_beli_total_ppn").val();
+                var tgl     = $("#tgl").val();
+                var bln     = $("#bln").val();
+                var thn     = $("#thn").val();
+                var exp     = thn+"-"+bln+"-"+tgl;
+                var batch     = $("#batch").val();
+                var qty     = $("#qty").val();
+                $(".default").hide();
+                $("<tr><td>"+item+"</td><td>"+nama+"</td><td style='text-align:center;width:40px'>"+qty+"</td><td style='text-align:center;width:100px'>"+exp+"</td><td style='text-align:right;width:100px'>"+harga_beli_satuan_ppn+"</td><td style='text-align:right;width:100px'>"+harga_beli_total_ppn+"</td><td style='width:5px;text-align:center' class='del'><a href='' class='deletes' style=''><b class='icon-remove'></b></a></td><input id='rows"+count+"' name='rows[]' value='"+item+"|"+qty+"|"+exp+"|"+harga_beli_satuan_ppn+"|"+batch+"' type='hidden'>").appendTo('#tbTambah tbody');
+                $("#fx_item_input").val("");
+                $("#qty").val("");
+                $("#satuan").val("");
+                $("#harga_beli_satuan_ppn").val("");
+                $("#harga_beli_total_ppn").val("");
+                $("#tgl").val("").trigger('liszt:updated');
+                $("#bln").val("").trigger('liszt:updated');
+                $("#thn").val("").trigger('liszt:updated');
+                $("#batch").val("");
+                calculate();
+                $("#fx_item_input").focus();
+                return false;
+        })  
+
+
+        $(".deletes").die('click').live('click',function(){
+            $(this).parent().parent().fadeOut(function(){
+                $(this).remove();
+                calculate();
+            })
+            return false;
+        });
+
+        function calculate(){
+            var total = 0;
+            $("#tbTambah tbody tr").each(function(){
+                total += parseFloat($(this).find('td:eq(5)').html());
+            })
+            $("#total").val(total);
+            $("#totalText").html(total);
+            var discount   = $("#discount").val();
+            var grandTotal = total  - discount;
+            $("#grand").val(grandTotal);
+            $("#grandText").html(grandTotal);
+        }
+    })
+</script>
